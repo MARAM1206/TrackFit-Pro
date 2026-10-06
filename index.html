@@ -28,7 +28,7 @@
 
     <style>
         :root {
-            /* Perfil Max (Naranja) */
+            /* Perfil Max (Naranja Vibrante) */
             --theme-400: 251 146 60;  
             --theme-500: 249 115 22;  
             --theme-600: 234 88 12;   
@@ -36,11 +36,11 @@
         }
 
         body[data-user="Pipe"] {
-            /* Perfil Pipe (Rojo Claro) */
-            --theme-400: 248 113 113; 
-            --theme-500: 239 68 68;   
-            --theme-600: 220 38 38;   
-            --theme-900: 127 29 29;   
+            /* Perfil Pipe (Rojo Carmesí Intenso y Contrastante) */
+            --theme-400: 244 63 94; 
+            --theme-500: 225 29 72;   
+            --theme-600: 190 18 60;   
+            --theme-900: 136 19 55;   
         }
 
         body {
@@ -82,7 +82,6 @@
         }
         input[type="number"] { -moz-appearance: textfield; }
 
-        /* TOAST NOTIFICATIONS */
         #toast-container {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
             z-index: 100; display: flex; flex-direction: column; gap: 10px;
@@ -97,12 +96,23 @@
 
         @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeOut { to { opacity: 0; transform: translateY(-20px); } }
+
+        /* Efecto visual al guardar */
+        @keyframes savedPulse {
+            0% { transform: scale(1); background-color: #10b981; }
+            50% { transform: scale(1.05); background-color: #059669; }
+            100% { transform: scale(1); }
+        }
+        .btn-saved {
+            animation: savedPulse 0.4s ease-out;
+            background-color: #10b981 !important;
+            color: white !important;
+        }
     </style>
 </head>
 <body data-user="Max" class="h-screen flex flex-col md:flex-row overflow-hidden">
 
-    <!-- MENÚ LATERAL -->
-    <nav class="w-full md:w-72 glass-card p-4 flex flex-col z-20 shadow-2xl flex-shrink-0 border-r border-slate-800">
+    <nav class="w-full md:w-64 lg:w-72 glass-card p-4 flex flex-col z-20 shadow-2xl flex-shrink-0 border-r border-slate-800">
         <div class="mb-5 flex flex-row md:flex-col items-center md:items-start justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2 transition-colors">
@@ -120,14 +130,11 @@
         <div class="flex md:flex-col gap-2 overflow-x-auto no-scrollbar pb-2 md:pb-0" id="tabs-container"></div>
     </nav>
 
-    <!-- CONTENIDO PRINCIPAL -->
-    <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-[#0b1121]">
+    <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-[#0b1121]">
         
-        <!-- ENCABEZADO GLOBAL (SALUDO Y SYNC) -->
         <div class="max-w-[1400px] mx-auto mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <h2 id="dynamic-greeting" class="text-lg md:text-xl font-bold text-slate-300">Buenos días, Max</h2>
             
-            <!-- INDICADOR DE CLOUD SYNC -->
             <div id="sync-indicator" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 shadow-sm transition-colors">
                 <div id="sync-dot" class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
                 <span id="sync-text" class="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Conectando...</span>
@@ -148,11 +155,9 @@
                 </div>
             </header>
 
-            <!-- GRID MÁS AMPLIO -->
-            <div id="exercises-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5"></div>
+            <div id="exercises-container" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5"></div>
         </div>
 
-        <!-- VISTA: AVANCES -->
         <div id="progress-view" class="hidden max-w-[1400px] mx-auto flex flex-col gap-6">
             <header class="mb-2">
                 <h3 class="text-2xl md:text-3xl font-bold text-white mb-1 tracking-tight">Centro de Avances</h3>
@@ -161,22 +166,19 @@
 
             <!-- PESO CORPORAL -->
             <div class="glass-card p-5 md:p-6 rounded-2xl border-l-4 border-l-theme-500 transition-colors">
-                <div class="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
-                    <div class="w-full md:w-auto">
+                <div class="flex flex-col lg:flex-row justify-between items-start gap-4 mb-6">
+                    <div class="w-full lg:w-1/2">
                         <h4 class="text-xl font-bold text-white mb-2">Evolución de Peso Corporal</h4>
                         <div id="bw-summary" class="flex flex-col gap-1 text-sm bg-slate-900/50 p-3 rounded-lg border border-slate-800"></div>
                     </div>
                     
-                    <div class="flex items-center gap-2 w-full md:w-auto bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
+                    <div class="flex items-center gap-2 w-full lg:w-auto bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
                         <input type="date" id="bw-date" class="bg-slate-800 border border-slate-700 rounded-lg px-2 py-2 text-white text-sm focus:border-theme-500 outline-none flex-1 md:w-auto">
-                        
-                        <!-- INPUT PESO CORPORAL (SOLO KG) -->
                         <div class="relative flex items-center">
                             <input type="number" step="0.1" inputmode="decimal" id="bw-weight" placeholder="Ej. 65.5" class="bg-slate-800 border border-slate-700 rounded-lg pl-3 pr-8 py-2 text-white text-sm focus:border-theme-500 outline-none w-24">
                             <span class="absolute right-3 text-xs text-slate-400 font-bold pointer-events-none">kg</span>
                         </div>
-                        
-                        <button onclick="saveBodyWeight()" class="bg-theme-600 hover:bg-theme-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-lg shadow-theme-500/20">Guardar</button>
+                        <button id="btn-save-bw" onclick="saveBodyWeight()" class="bg-theme-600 hover:bg-theme-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 shadow-lg shadow-theme-500/20">Guardar</button>
                     </div>
                 </div>
                 
@@ -205,7 +207,7 @@
                 </div>
                 
                 <!-- HISTORIAL DÍA A DÍA -->
-                <div class="glass-card p-5 md:p-6 rounded-2xl border-l-4 border-l-theme-500 transition-colors flex flex-col max-h-[400px] lg:col-span-2">
+                <div class="glass-card p-5 md:p-6 rounded-2xl border-l-4 border-l-theme-500 transition-colors flex flex-col max-h-[450px] lg:col-span-2">
                     <h4 class="text-white font-bold text-lg mb-1">Historial por Rutina (Día a Día)</h4>
                     <p class="text-xs text-slate-400 mb-4">Compara el rendimiento exacto sesión tras sesión.</p>
                     
@@ -222,17 +224,16 @@
                 </div>
             </div>
             
-            <!-- EXPORTAR/IMPORTAR OFFLINE -->
             <div class="glass-card p-5 md:p-6 rounded-2xl mt-2 bg-gradient-to-r from-slate-900 to-slate-800 border border-theme-900/30">
-                <h4 class="text-lg font-bold text-white mb-2">Sincronización Manual (Offline)</h4>
-                <p class="text-xs text-slate-400 mb-4">Usa esto solo si el "Cloud Sync" de arriba está rojo. Copia tu código y envíaselo a Pipe.</p>
+                <h4 class="text-lg font-bold text-white mb-2">Sincronizar Datos (Importar/Exportar)</h4>
+                <p class="text-xs text-slate-400 mb-4">Usa esto para traer tus datos viejos o para enviarle tu progreso a Pipe por WhatsApp si falla el internet.</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/50">
                         <button onclick="exportData()" class="w-full bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-lg text-sm font-bold transition-colors shadow-lg">📋 Copiar mis datos</button>
                     </div>
                     <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/50">
                         <div class="flex gap-2">
-                            <input type="text" id="import-code" placeholder="Pega el código aquí..." class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-theme-500">
+                            <input type="text" id="import-code" placeholder="Pega el código aquí..." class="flex-1 w-0 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-theme-500">
                             <button onclick="importData()" class="bg-theme-600 hover:bg-theme-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">Integrar</button>
                         </div>
                     </div>
@@ -312,16 +313,16 @@
         window.currentDay = 'lunes';
         let timerInterval;
         let chartInstances = {};
-        const userColors = { 'Max': '#f97316', 'Pipe': '#ef4444' };
         
-        // Variables Base de Datos
+        // Colores de la app (Naranja vs Carmesí Intenso)
+        const userColors = { 'Max': '#f97316', 'Pipe': '#e11d48' };
+        
         let isCloudActive = false;
         let globalExerciseHistory = [];
         let globalBodyWeights = [];
         let app, db, auth;
         let hasAutoSelectedDay = false;
 
-        // Firebase Config proporcionada por ti
         const firebaseConfig = {
             apiKey: "AIzaSyDo8bDMUCkWWa13S1wlia-rO4UF0c4mNBo",
             authDomain: "trackfit-database-83ab5.firebaseapp.com",
@@ -357,10 +358,7 @@
                 await signInAnonymously(auth);
                 setupRealtimeListeners();
             } catch (error) {
-                console.warn("Firebase Auth falló, usando LocalStorage.", error);
-                if(error.code === 'auth/operation-not-allowed') {
-                    showToast('Firebase: Activa "Anónimo" en Authentication', 'error');
-                }
+                console.warn("Firebase Auth falló, usando LocalStorage. Asegúrate de habilitar Anónimo en Auth y agregar github.io a Dominios Autorizados.", error);
                 updateSyncStatus('error');
                 autoSelectDay();
             }
@@ -369,17 +367,16 @@
         function setupRealtimeListeners() {
             if (!auth.currentUser) return;
             
-            // Intento de conexión Firestore
-            const unsubscribeEx = onSnapshot(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'exerciseHistory'), 
+            onSnapshot(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'exerciseHistory'), 
                 (snapshot) => {
                     globalExerciseHistory = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
                     updateSyncStatus('success');
                     if (window.currentDay === 'progreso') renderProgress(); else renderExercises(window.currentDay);
                 },
-                (error) => { console.warn("Faltan permisos Firestore", error); updateSyncStatus('error'); }
+                (error) => { console.warn("Error Firestore (Reglas):", error); updateSyncStatus('error'); }
             );
 
-            const unsubscribeBw = onSnapshot(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'bodyWeights'), 
+            onSnapshot(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'bodyWeights'), 
                 (snapshot) => {
                     globalBodyWeights = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
                     if (window.currentDay === 'progreso') renderProgress();
@@ -393,6 +390,13 @@
         function getLocalISODate() {
             const tzOffset = (new Date()).getTimezoneOffset() * 60000;
             return (new Date(Date.now() - tzOffset)).toISOString().slice(0, 10);
+        }
+
+        function formatAestheticDate(isoDate) {
+            if(!isoDate) return '';
+            const [y, m, d] = isoDate.split('-');
+            const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            return `${d}/${months[parseInt(m)-1]}/${y}`;
         }
 
         function updateGreeting() {
@@ -422,7 +426,6 @@
             document.getElementById('btn-user-Max').classList.toggle('active-user', user === 'Max');
             document.getElementById('btn-user-Pipe').classList.toggle('active-user', user === 'Pipe');
             updateGreeting();
-            showToast(`👤 Perfil cambiado a ${user}`);
             if (window.currentDay === 'progreso') renderProgress(); else renderExercises(window.currentDay);
         }
 
@@ -435,7 +438,7 @@
             setTimeout(() => { toast.style.animation = 'fadeOut 0.3s ease forwards'; setTimeout(() => toast.remove(), 300); }, 1500);
         }
 
-        window.playBeep = function() {
+        function playBeep() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = ctx.createOscillator(); const gain = ctx.createGain();
@@ -450,7 +453,7 @@
             let timeLeft = seconds; showToast(`⏱ Descanso: ${timeLeft}s`);
             timerInterval = setInterval(() => {
                 timeLeft--;
-                if (timeLeft <= 0) { clearInterval(timerInterval); window.playBeep(); showToast('🔥 ¡TIEMPO! A la serie.'); }
+                if (timeLeft <= 0) { clearInterval(timerInterval); playBeep(); showToast('🔥 ¡TIEMPO! A la serie.'); }
             }, 1000);
         }
 
@@ -459,6 +462,19 @@
             const diffDays = Math.floor((dateObj - START_DATE) / (1000 * 60 * 60 * 24));
             const weekNum = Math.floor(diffDays / 7) + 1;
             return weekNum > 0 ? weekNum : 1; 
+        }
+
+        function playSavedAnimation(btnId) {
+            const btn = document.getElementById(btnId);
+            if(btn) {
+                const originalText = btn.innerText;
+                btn.classList.add('btn-saved');
+                btn.innerText = '¡Guardado!';
+                setTimeout(() => {
+                    btn.classList.remove('btn-saved');
+                    btn.innerText = originalText;
+                }, 1000);
+            }
         }
 
         window.toggleUnit = function(dayId, index, unit) {
@@ -474,12 +490,29 @@
             }
         }
 
-        // Helper para obtener datos unificados (Nube o Local)
         function getMergedHistory(user, dayId, index) {
+            const localHist = JSON.parse(localStorage.getItem(`tf_pro_hist_${user}_${dayId}_${index}`)) || [];
+            let cloudHist = [];
             if(isCloudActive) {
-                return globalExerciseHistory.filter(e => e.user === user && e.dayId === dayId && e.exerciseIndex === index).sort((a,b)=>a.timestamp-b.timestamp);
+                cloudHist = globalExerciseHistory.filter(e => e.user === user && e.dayId === dayId && e.exerciseIndex === index);
             }
-            return (JSON.parse(localStorage.getItem(`tf_pro_hist_${user}_${dayId}_${index}`)) || []).sort((a,b)=>a.timestamp-b.timestamp);
+            
+            const mergedMap = new Map();
+            localHist.forEach(e => mergedMap.set(e.dateStr, e));
+            cloudHist.forEach(e => mergedMap.set(e.dateStr, e));
+            return Array.from(mergedMap.values()).sort((a,b)=>a.timestamp-b.timestamp);
+        }
+
+        function getMergedBodyWeights(user) {
+            const localHist = JSON.parse(localStorage.getItem(`tf_pro_bw_${user}`)) || [];
+            let cloudHist = [];
+            if(isCloudActive) {
+                cloudHist = globalBodyWeights.filter(e => e.user === user);
+            }
+            const mergedMap = new Map();
+            localHist.forEach(e => mergedMap.set(e.dateStr, e));
+            cloudHist.forEach(e => mergedMap.set(e.dateStr, e));
+            return Array.from(mergedMap.values()).sort((a,b)=>a.timestamp-b.timestamp);
         }
 
         function getSavedExerciseData(dayId, index, dateVal) {
@@ -518,14 +551,17 @@
                     }
                 } catch(e) { console.error("Error nube:", e); }
             }
-            if(!isNaN(val)) showToast('💾 Guardado');
-            if(!isCloudActive) updateCharts(); // Forzar update visual en local
+            
+            if(!isNaN(val)) {
+                playSavedAnimation(`btn-save-${dayId}-${index}`);
+            }
+            if(!isCloudActive) updateCharts(); 
         }
 
         window.saveBodyWeight = async function() {
             const dateVal = document.getElementById('bw-date').value;
             const weightVal = parseFloat(document.getElementById('bw-weight').value);
-            if(!dateVal || isNaN(weightVal)) { showToast("Ingresa peso válido", "error"); return; }
+            if(!dateVal || isNaN(weightVal)) { showToast("Ingresa un peso válido", "error"); return; }
             const timestamp = new Date(dateVal + 'T12:00:00').getTime();
 
             // 1. Local
@@ -544,7 +580,8 @@
                     else await addDoc(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'bodyWeights'), dataObj);
                 } catch(e) {}
             }
-            showToast("✅ Peso registrado");
+            
+            playSavedAnimation('btn-save-bw');
             document.getElementById('bw-weight').value = "";
             updateCharts();
         }
@@ -608,21 +645,23 @@
                         </div>
                     </div>
 
-                    <!-- REESTRUCTURACIÓN DEL ESPACIO INFERIOR -->
                     <div class="mt-auto border-t border-slate-700/50 pt-4 flex flex-col gap-3">
                         <label class="block text-[10px] text-slate-400 uppercase tracking-widest mb-0.5">Carga de trabajo:</label>
-                        <div class="flex items-center gap-2 w-full">
-                            <input type="hidden" id="unit-${dayId}-${index}" value="${currentUnit}">
-                            <input type="number" step="0.5" inputmode="decimal" id="weight-${dayId}-${index}" value="${currentWeight}" placeholder="Ej. 45" class="flex-1 w-0 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-theme-500 transition-colors">
-                            <div class="flex bg-slate-900 rounded-lg p-1 border border-slate-700 flex-shrink-0">
-                                <button type="button" id="btn-kg-${dayId}-${index}" onclick="toggleUnit('${dayId}', ${index}, 'kg')" class="px-3 py-1.5 rounded-md text-[11px] font-bold transition-colors ${currentUnit==='kg'?'bg-emerald-500 text-white shadow-sm':'bg-slate-800 text-slate-400 hover:bg-slate-700'}">KG</button>
-                                <button type="button" id="btn-lbs-${dayId}-${index}" onclick="toggleUnit('${dayId}', ${index}, 'lbs')" class="px-3 py-1.5 rounded-md text-[11px] font-bold transition-colors ${currentUnit==='lbs'?'bg-emerald-500 text-white shadow-sm':'bg-slate-800 text-slate-400 hover:bg-slate-700'}">LBS</button>
-                            </div>
-                        </div>
                         
-                        <div class="flex gap-2 w-full mt-1">
-                            <button onclick="startTimer(${ex.restTime})" class="w-2/3 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors border border-slate-600 shadow-sm">⏱ Descanso (${ex.restTime}s)</button>
-                            <button id="btn-save-${dayId}-${index}" onclick="saveWeight('${dayId}', ${index})" class="w-1/3 bg-theme-600 hover:bg-theme-500 text-white py-2.5 rounded-xl text-xs font-bold transition-all duration-300 shadow-lg shadow-theme-500/20">Guardar</button>
+                        <div class="flex flex-col xl:flex-row gap-2 w-full">
+                            <div class="flex items-center gap-2 w-full xl:flex-1">
+                                <input type="hidden" id="unit-${dayId}-${index}" value="${currentUnit}">
+                                <input type="number" step="0.5" inputmode="decimal" id="weight-${dayId}-${index}" value="${currentWeight}" placeholder="Ej. 45" class="flex-1 w-0 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-theme-500 transition-colors">
+                                <div class="flex bg-slate-900 rounded-lg p-1 border border-slate-700 flex-shrink-0">
+                                    <button type="button" id="btn-kg-${dayId}-${index}" onclick="toggleUnit('${dayId}', ${index}, 'kg')" class="px-3 py-1.5 rounded-md text-[11px] font-bold transition-colors ${currentUnit==='kg'?'bg-emerald-500 text-white shadow-sm':'bg-slate-800 text-slate-400 hover:bg-slate-700'}">KG</button>
+                                    <button type="button" id="btn-lbs-${dayId}-${index}" onclick="toggleUnit('${dayId}', ${index}, 'lbs')" class="px-3 py-1.5 rounded-md text-[11px] font-bold transition-colors ${currentUnit==='lbs'?'bg-emerald-500 text-white shadow-sm':'bg-slate-800 text-slate-400 hover:bg-slate-700'}">LBS</button>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-2 w-full xl:w-auto">
+                                <button onclick="startTimer(${ex.restTime})" class="flex-1 xl:w-32 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors border border-slate-600 shadow-sm">⏱ (${ex.restTime}s)</button>
+                                <button id="btn-save-${dayId}-${index}" onclick="saveWeight('${dayId}', ${index})" class="flex-1 xl:w-24 bg-theme-600 hover:bg-theme-500 text-white py-2.5 rounded-xl text-xs font-bold transition-all duration-300 shadow-lg shadow-theme-500/20">Guardar</button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -646,9 +685,9 @@
         function updateCharts() {
             Chart.defaults.color = '#94a3b8'; Chart.defaults.font.family = 'Inter';
             
-            // 1. DATA BW
-            const bwMax = isCloudActive ? globalBodyWeights.filter(e=>e.user==='Max').sort((a,b)=>a.timestamp-b.timestamp) : (JSON.parse(localStorage.getItem(`tf_pro_bw_Max`)) || []);
-            const bwPipe = isCloudActive ? globalBodyWeights.filter(e=>e.user==='Pipe').sort((a,b)=>a.timestamp-b.timestamp) : (JSON.parse(localStorage.getItem(`tf_pro_bw_Pipe`)) || []);
+            // 1. DATA BW (Combinando Local y Cloud)
+            const bwMax = getMergedBodyWeights('Max');
+            const bwPipe = getMergedBodyWeights('Pipe');
             const allBwDates = [...new Set([...bwMax.map(e=>e.dateStr), ...bwPipe.map(e=>e.dateStr)])].sort();
             
             const bwMaxData = allBwDates.map(d => { const e = bwMax.find(x=>x.dateStr===d); return e ? e.weight : null; });
@@ -661,15 +700,15 @@
                 {label: 'Pipe (kg)', data: bwPipeData, color: userColors['Pipe']}
             ], true);
 
-            // Resumen Textual BW Inteligente
+            // Resumen Textual BW
             let summaryHtml = '';
             if(bwMax.length > 0) {
                 const first = bwMax[0].weight; const last = bwMax[bwMax.length-1].weight; const diff = (last-first).toFixed(1);
-                summaryHtml += `<div class="flex justify-between items-center text-slate-300"><span class="font-semibold text-orange-400">Max:</span> <span>Inicial: ${first}kg ➔ Actual: ${last}kg <strong class="${diff>=0?'text-emerald-400':'text-red-400'}">(${diff>=0?'+':''}${diff}kg)</strong></span></div>`;
+                summaryHtml += `<div class="flex justify-between items-center text-slate-300"><span class="font-semibold" style="color:${userColors['Max']}">Max:</span> <span>Inició: ${first}kg ➔ Actual: ${last}kg <strong class="${diff>=0?'text-emerald-400':'text-red-400'}">(${diff>=0?'+':''}${diff}kg)</strong></span></div>`;
             }
             if(bwPipe.length > 0) {
                 const first = bwPipe[0].weight; const last = bwPipe[bwPipe.length-1].weight; const diff = (last-first).toFixed(1);
-                summaryHtml += `<div class="flex justify-between items-center text-slate-300 border-t border-slate-700/50 pt-1 mt-1"><span class="font-semibold text-red-400">Pipe:</span> <span>Inicial: ${first}kg ➔ Actual: ${last}kg <strong class="${diff>=0?'text-emerald-400':'text-red-400'}">(${diff>=0?'+':''}${diff}kg)</strong></span></div>`;
+                summaryHtml += `<div class="flex justify-between items-center text-slate-300 border-t border-slate-700/50 pt-1 mt-1"><span class="font-semibold" style="color:${userColors['Pipe']}">Pipe:</span> <span>Inició: ${first}kg ➔ Actual: ${last}kg <strong class="${diff>=0?'text-emerald-400':'text-red-400'}">(${diff>=0?'+':''}${diff}kg)</strong></span></div>`;
             }
             if(!summaryHtml) summaryHtml = '<p class="text-slate-500 italic">No hay registros corporales aún.</p>';
             document.getElementById('bw-summary').innerHTML = summaryHtml;
@@ -688,7 +727,6 @@
 
             renderRadarChart();
             
-            // Re-renderizar lista si hay un día seleccionado
             const sel = document.getElementById('day-progress-select').value;
             if(sel) window.renderDayProgress(sel);
         }
@@ -729,10 +767,10 @@
                         if(maxW > 0) {
                             let cat = 'Core';
                             if(ex.muscle.includes('Pecho')) cat = 'Pecho';
-                            else if(ex.muscle.includes('Espalda') || ex.muscle.includes('Dorsal')) cat = 'Espalda';
-                            else if(ex.muscle.includes('Cuádriceps') || ex.muscle.includes('Glúteo') || ex.muscle.includes('Isquios') || ex.muscle.includes('Gemelos')) cat = 'Pierna';
-                            else if(ex.muscle.includes('Hombro')) cat = 'Hombro';
-                            else if(ex.muscle.includes('Bíceps') || ex.muscle.includes('Tríceps') || ex.muscle.includes('Antebrazo')) cat = 'Brazos';
+                            else if(ex.muscle.includes('Espalda') || ex.muscle.includes('Dorsal') || ex.muscle.includes('Lumbares')) cat = 'Espalda';
+                            else if(ex.muscle.includes('Cuádriceps') || ex.muscle.includes('Glúteo') || ex.muscle.includes('Isquios') || ex.muscle.includes('Gemelos') || ex.muscle.includes('Sóleo')) cat = 'Pierna';
+                            else if(ex.muscle.includes('Hombro') || ex.muscle.includes('Deltoides')) cat = 'Hombro';
+                            else if(ex.muscle.includes('Bíceps') || ex.muscle.includes('Tríceps') || ex.muscle.includes('Antebrazos')) cat = 'Brazos';
                             mScores[cat] += maxW;
                         }
                     });
@@ -798,7 +836,6 @@
                     let pHist = getMergedHistory('Pipe', dayId, index);
                     const mEntry = mHist.find(e => e.dateStr === dateStr); const pEntry = pHist.find(e => e.dateStr === dateStr);
 
-                    // Calculamos la diferencia incluso si hoy no hay registro (Para mantener los 5 en la lista)
                     const calcDiff = (hist, curr) => {
                         if(!curr) return '';
                         const past = hist.filter(e => e.dateStr < dateStr);
@@ -809,10 +846,10 @@
                         return `<span class="text-slate-500 text-[10px] ml-1">=</span>`;
                     };
 
-                    const mWeight = mEntry ? `<span class="font-bold text-orange-400">${mEntry.weight}${mEntry.unit}</span>${calcDiff(mHist, mEntry)}` : '<span class="text-slate-600">--</span>';
-                    const pWeight = pEntry ? `<span class="font-bold text-red-400">${pEntry.weight}${pEntry.unit}</span>${calcDiff(pHist, pEntry)}` : '<span class="text-slate-600">--</span>';
+                    const mWeight = mEntry ? `<span class="font-bold" style="color:${userColors['Max']}">${mEntry.weight}${mEntry.unit}</span>${calcDiff(mHist, mEntry)}` : '<span class="text-slate-600">--</span>';
+                    const pWeight = pEntry ? `<span class="font-bold" style="color:${userColors['Pipe']}">${pEntry.weight}${pEntry.unit}</span>${calcDiff(pHist, pEntry)}` : '<span class="text-slate-600">--</span>';
 
-                    htmlStr += `<div class="py-2 flex justify-between items-center text-xs"><span class="text-slate-300 font-medium truncate w-1/2 pr-2">${index + 1}. ${ex.name}</span><div class="w-1/2 flex justify-end gap-3 text-right"><div class="w-1/2 bg-slate-900/50 rounded px-1 py-1 border border-orange-900/30"><span class="block text-[8px] text-orange-500 uppercase">Max</span>${mWeight}</div><div class="w-1/2 bg-slate-900/50 rounded px-1 py-1 border border-red-900/30"><span class="block text-[8px] text-red-500 uppercase">Pipe</span>${pWeight}</div></div></div>`;
+                    htmlStr += `<div class="py-2 flex justify-between items-center text-xs"><span class="text-slate-300 font-medium truncate w-1/2 pr-2">${index + 1}. ${ex.name}</span><div class="w-1/2 flex justify-end gap-2 text-right"><div class="w-1/2 bg-slate-900/50 rounded px-1 py-1 border border-slate-700"><span class="block text-[8px] uppercase" style="color:${userColors['Max']}">Max</span>${mWeight}</div><div class="w-1/2 bg-slate-900/50 rounded px-1 py-1 border border-slate-700"><span class="block text-[8px] uppercase" style="color:${userColors['Pipe']}">Pipe</span>${pWeight}</div></div></div>`;
                 });
                 htmlStr += `</div></div>`;
             });
@@ -829,11 +866,11 @@
                 const encodedData = btoa(encodeURIComponent(JSON.stringify(dataToExport)));
                 const tempInput = document.createElement("input"); tempInput.value = encodedData; document.body.appendChild(tempInput);
                 tempInput.select(); document.execCommand("copy"); document.body.removeChild(tempInput);
-                showToast("✅ Copiado. Envíalo por WhatsApp.");
+                showToast("✅ Código de datos copiado. Compártelo o úsalo para migrar.");
             } catch (err) { showToast("Error al exportar", "error"); }
         }
 
-        window.importData = function() {
+        window.importData = async function() {
             const inputField = document.getElementById('import-code');
             const code = inputField.value.trim();
             if(!code) { showToast("Pega el código", "error"); return; }
@@ -841,6 +878,8 @@
             try {
                 const decodedStr = decodeURIComponent(atob(code));
                 const dataToImport = JSON.parse(decodedStr);
+                
+                showToast("Procesando datos...", "success");
                 
                 for (const key in dataToImport) {
                     if(key.startsWith('tf_pro_')) {
@@ -851,11 +890,36 @@
                             localData.forEach(e => mergedMap.set(e.dateStr, e));
                             importedData.forEach(e => mergedMap.set(e.dateStr, e));
                             const mergedArray = Array.from(mergedMap.values()).sort((a,b)=>a.timestamp - b.timestamp);
+                            
+                            // Guardamos localmente
                             localStorage.setItem(key, JSON.stringify(mergedArray));
+
+                            // SUBIMOS A LA NUBE (MIGRACIÓN MAGISTRAL)
+                            if (isCloudActive && auth?.currentUser) {
+                                for (const entry of mergedArray) {
+                                    if (key.includes('_hist_')) {
+                                        const parts = key.split('_');
+                                        const user = parts[3]; const dayId = parts[4]; const index = parseInt(parts[5]);
+                                        const existing = globalExerciseHistory.find(e => e.user === user && e.dayId === dayId && e.exerciseIndex === index && e.dateStr === entry.dateStr);
+                                        if(!existing) {
+                                            const dataObj = { user, dayId, exerciseIndex: index, dateStr: entry.dateStr, weight: entry.weight, unit: entry.unit || 'kg', timestamp: entry.timestamp, week: entry.week };
+                                            await addDoc(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'exerciseHistory'), dataObj);
+                                        }
+                                    } else if (key.includes('_bw_')) {
+                                        const user = key.split('_')[3];
+                                        const existing = globalBodyWeights.find(e => e.user === user && e.dateStr === entry.dateStr);
+                                        if(!existing) {
+                                            const dataObj = { user, dateStr: entry.dateStr, weight: entry.weight, timestamp: entry.timestamp };
+                                            await addDoc(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'bodyWeights'), dataObj);
+                                        }
+                                    }
+                                }
+                            }
                         } else localStorage.setItem(key, dataToImport[key]);
                     }
                 }
-                inputField.value = ""; showToast(`✅ Importado con éxito.`); updateCharts(); 
+                inputField.value = ""; showToast(`✅ Importación y sincronización exitosa.`); updateCharts(); 
+                if(window.currentDay !== 'progreso') renderExercises(window.currentDay);
             } catch (err) { showToast("Código inválido", "error"); }
         }
 
