@@ -9,7 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Configuración Dinámica de Tailwind -->
     <script>
         tailwind.config = {
             theme: {
@@ -49,7 +48,7 @@
             background-color: #0b1121;
             color: #f8fafc;
             -webkit-tap-highlight-color: transparent;
-            transition: background-color 0.3s ease;
+            transition: --theme-400 0.3s, --theme-500 0.3s;
         }
         
         .glass-card {
@@ -81,12 +80,13 @@
         input[type="number"]::-webkit-outer-spin-button { 
             -webkit-appearance: none; margin: 0; 
         }
-        input[type="number"] { -moz-appearance: textfield; } /* Para Firefox */
+        input[type="number"] { -moz-appearance: textfield; }
 
+        /* TOAST NOTIFICATIONS */
         #toast-container {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
             z-index: 100; display: flex; flex-direction: column; gap: 10px;
-            width: 90%; max-width: 350px;
+            width: 90%; max-width: 350px; pointer-events: none;
         }
         .toast {
             background: #10b981; color: white; padding: 12px 16px; border-radius: 10px;
@@ -95,22 +95,13 @@
         }
         .toast.error { background: #ef4444; }
 
-        @keyframes slideDown {
-            from { transform: translateY(-100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
+        @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeOut { to { opacity: 0; transform: translateY(-20px); } }
-        
-        .loader {
-            border: 3px solid rgba(255,255,255,0.1); border-radius: 50%;
-            border-top: 3px solid rgb(var(--theme-500)); width: 20px; height: 20px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body data-user="Max" class="h-screen flex flex-col md:flex-row overflow-hidden">
 
+    <!-- MENÚ LATERAL -->
     <nav class="w-full md:w-72 glass-card p-4 flex flex-col z-20 shadow-2xl flex-shrink-0 border-r border-slate-800">
         <div class="mb-5 flex flex-row md:flex-col items-center md:items-start justify-between gap-4">
             <div>
@@ -125,21 +116,26 @@
                 <button onclick="switchUser('Pipe')" id="btn-user-Pipe" class="flex-1 user-tab text-xs font-bold px-4 py-2 rounded-md text-slate-300">Pipe</button>
             </div>
         </div>
+        
         <div class="flex md:flex-col gap-2 overflow-x-auto no-scrollbar pb-2 md:pb-0" id="tabs-container"></div>
     </nav>
 
-    <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-[#0b1121] relative">
-        <div id="app-loader" class="absolute inset-0 bg-[#0b1121] z-50 flex flex-col items-center justify-center">
-            <div class="loader mb-4 w-10 h-10 border-4"></div>
-            <p class="text-slate-400 text-sm font-semibold">Cargando...</p>
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-[#0b1121]">
+        
+        <!-- ENCABEZADO GLOBAL (SALUDO Y SYNC) -->
+        <div class="max-w-[1400px] mx-auto mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <h2 id="dynamic-greeting" class="text-lg md:text-xl font-bold text-slate-300">Buenos días, Max</h2>
+            
+            <!-- INDICADOR DE CLOUD SYNC -->
+            <div id="sync-indicator" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 shadow-sm transition-colors">
+                <div id="sync-dot" class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
+                <span id="sync-text" class="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Conectando...</span>
+            </div>
         </div>
 
-        <div id="exercises-view" class="max-w-6xl mx-auto hidden">
-            <!-- Saludo Dinámico Personalizado -->
-            <div class="mb-4">
-                <h2 id="dynamic-greeting" class="text-xl md:text-2xl font-bold text-slate-300">Buenos días, Max</h2>
-            </div>
-
+        <!-- VISTA: EJERCICIOS -->
+        <div id="exercises-view" class="max-w-[1400px] mx-auto hidden">
             <header class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                 <div>
                     <h3 id="current-day-title" class="text-2xl md:text-3xl font-bold text-white mb-1 tracking-tight">Cargando...</h3>
@@ -152,51 +148,67 @@
                 </div>
             </header>
 
-            <div id="exercises-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5"></div>
+            <!-- GRID MÁS AMPLIO -->
+            <div id="exercises-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5"></div>
         </div>
 
-        <div id="progress-view" class="hidden max-w-5xl mx-auto flex flex-col gap-6">
+        <!-- VISTA: AVANCES -->
+        <div id="progress-view" class="hidden max-w-[1400px] mx-auto flex flex-col gap-6">
             <header class="mb-2">
-                <h2 class="text-2xl md:text-3xl font-bold text-white mb-1 tracking-tight">Centro de Avances</h2>
-                <p class="text-sm text-theme-400 font-medium">Comparativas de sobrecarga Max vs Pipe</p>
+                <h3 class="text-2xl md:text-3xl font-bold text-white mb-1 tracking-tight">Centro de Avances</h3>
+                <p class="text-sm text-theme-400 font-medium">Comparativas de sobrecarga progresiva Max vs Pipe</p>
             </header>
 
+            <!-- PESO CORPORAL -->
             <div class="glass-card p-5 md:p-6 rounded-2xl border-l-4 border-l-theme-500 transition-colors">
                 <div class="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
                     <div class="w-full md:w-auto">
-                        <h3 class="text-xl font-bold text-white mb-2">Evolución de Peso Corporal</h3>
+                        <h4 class="text-xl font-bold text-white mb-2">Evolución de Peso Corporal</h4>
                         <div id="bw-summary" class="flex flex-col gap-1 text-sm bg-slate-900/50 p-3 rounded-lg border border-slate-800"></div>
                     </div>
                     
                     <div class="flex items-center gap-2 w-full md:w-auto bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
                         <input type="date" id="bw-date" class="bg-slate-800 border border-slate-700 rounded-lg px-2 py-2 text-white text-sm focus:border-theme-500 outline-none flex-1 md:w-auto">
-                        <!-- Input type="number" con inputmode="decimal" llama al teclado numérico en móvil -->
+                        
+                        <!-- INPUT PESO CORPORAL (SOLO KG) -->
                         <div class="relative flex items-center">
                             <input type="number" step="0.1" inputmode="decimal" id="bw-weight" placeholder="Ej. 65.5" class="bg-slate-800 border border-slate-700 rounded-lg pl-3 pr-8 py-2 text-white text-sm focus:border-theme-500 outline-none w-24">
                             <span class="absolute right-3 text-xs text-slate-400 font-bold pointer-events-none">kg</span>
                         </div>
+                        
                         <button onclick="saveBodyWeight()" class="bg-theme-600 hover:bg-theme-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-lg shadow-theme-500/20">Guardar</button>
                     </div>
                 </div>
-                <div class="relative h-60 w-full mb-2"><canvas id="weightChart"></canvas></div>
+                
+                <div class="relative h-60 w-full mb-2">
+                    <canvas id="weightChart"></canvas>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- FUERZA SEMANAL -->
                 <div class="glass-card p-5 md:p-6 rounded-2xl border-l-4 border-l-theme-500 transition-colors flex flex-col">
-                    <h3 class="text-white font-bold text-lg mb-1">Índice de Fuerza Semanal</h3>
-                    <p class="text-xs text-slate-400 mb-6">Suma de kg máximos levantados por semana.</p>
-                    <div class="relative h-56 w-full mt-auto"><canvas id="weeklyChart"></canvas></div>
+                    <h4 class="text-white font-bold text-lg mb-1">Índice de Fuerza Semanal</h4>
+                    <p class="text-xs text-slate-400 mb-6">Suma total de kg máximos levantados en la semana.</p>
+                    <div class="relative h-56 w-full mt-auto">
+                        <canvas id="weeklyChart"></canvas>
+                    </div>
                 </div>
 
+                <!-- RADAR DE BALANCE MUSCULAR -->
                 <div class="glass-card p-5 md:p-6 rounded-2xl border-l-4 border-l-theme-500 transition-colors flex flex-col">
-                    <h3 class="text-white font-bold text-lg mb-1">Balance Muscular (Radar)</h3>
+                    <h4 class="text-white font-bold text-lg mb-1">Balance Muscular (Radar)</h4>
                     <p class="text-xs text-slate-400 mb-6">Distribución de fuerza por grupo muscular.</p>
-                    <div class="relative h-56 w-full mt-auto flex justify-center"><canvas id="radarChart"></canvas></div>
+                    <div class="relative h-56 w-full mt-auto flex justify-center">
+                        <canvas id="radarChart"></canvas>
+                    </div>
                 </div>
                 
+                <!-- HISTORIAL DÍA A DÍA -->
                 <div class="glass-card p-5 md:p-6 rounded-2xl border-l-4 border-l-theme-500 transition-colors flex flex-col max-h-[400px] lg:col-span-2">
-                    <h3 class="text-white font-bold text-lg mb-1">Historial por Rutina (Día a Día)</h3>
-                    <p class="text-xs text-slate-400 mb-4">Compara el rendimiento sesión tras sesión.</p>
+                    <h4 class="text-white font-bold text-lg mb-1">Historial por Rutina (Día a Día)</h4>
+                    <p class="text-xs text-slate-400 mb-4">Compara el rendimiento exacto sesión tras sesión.</p>
+                    
                     <select id="day-progress-select" onchange="renderDayProgress(this.value)" class="w-full bg-slate-900 border border-theme-500/50 text-white rounded-lg p-3 text-sm focus:outline-none focus:border-theme-500 cursor-pointer mb-4 transition-colors">
                         <option value="">-- Selecciona un día de rutina --</option>
                         <option value="lunes">Lunes (Torso + Abdomen)</option>
@@ -205,27 +217,38 @@
                         <option value="jueves">Jueves (Tirón + Espalda)</option>
                         <option value="viernes">Viernes (Pierna 2)</option>
                     </select>
+                    
                     <div id="day-progress-list" class="flex flex-col gap-4 overflow-y-auto pr-2 no-scrollbar flex-1"></div>
                 </div>
             </div>
             
+            <!-- EXPORTAR/IMPORTAR OFFLINE -->
             <div class="glass-card p-5 md:p-6 rounded-2xl mt-2 bg-gradient-to-r from-slate-900 to-slate-800 border border-theme-900/30">
-                <div class="flex items-center gap-3">
-                    <div class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
-                    <h3 class="text-lg font-bold text-white">Cloud Sync Activada</h3>
+                <h4 class="text-lg font-bold text-white mb-2">Sincronización Manual (Offline)</h4>
+                <p class="text-xs text-slate-400 mb-4">Usa esto solo si el "Cloud Sync" de arriba está rojo. Copia tu código y envíaselo a Pipe.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/50">
+                        <button onclick="exportData()" class="w-full bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-lg text-sm font-bold transition-colors shadow-lg">📋 Copiar mis datos</button>
+                    </div>
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/50">
+                        <div class="flex gap-2">
+                            <input type="text" id="import-code" placeholder="Pega el código aquí..." class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-theme-500">
+                            <button onclick="importData()" class="bg-theme-600 hover:bg-theme-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">Integrar</button>
+                        </div>
+                    </div>
                 </div>
-                <p class="text-sm text-slate-400 mt-2">Los pesos que registren tú o Pipe se guardan automáticamente en la nube (Si configuras Firebase).</p>
             </div>
         </div>
     </main>
+
     <div id="toast-container"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // EL DÍA CERO DE SU ENTRENAMIENTO (Utilizado para cuadrar siempre las semanas)
+        // EL DÍA CERO EXACTO
         const START_DATE = new Date('2026-09-07T00:00:00'); 
         
         const routineData = {
@@ -289,10 +312,83 @@
         window.currentDay = 'lunes';
         let timerInterval;
         let chartInstances = {};
-        const userColors = { 'Max': '#f97316', 'Pipe': '#ef4444' }; // Max=Naranja, Pipe=Rojo
+        const userColors = { 'Max': '#f97316', 'Pipe': '#ef4444' };
+        
+        // Variables Base de Datos
+        let isCloudActive = false;
         let globalExerciseHistory = [];
         let globalBodyWeights = [];
         let app, db, auth;
+        let hasAutoSelectedDay = false;
+
+        // Firebase Config proporcionada por ti
+        const firebaseConfig = {
+            apiKey: "AIzaSyDo8bDMUCkWWa13S1wlia-rO4UF0c4mNBo",
+            authDomain: "trackfit-database-83ab5.firebaseapp.com",
+            projectId: "trackfit-database-83ab5",
+            storageBucket: "trackfit-database-83ab5.firebasestorage.app",
+            messagingSenderId: "233927465610",
+            appId: "1:233927465610:web:f8569dad5596ca2c356b73"
+        };
+        const collectionAppId = "trackfit-pro-v2";
+
+        function updateSyncStatus(status) {
+            const dot = document.getElementById('sync-dot');
+            const txt = document.getElementById('sync-text');
+            dot.className = 'w-2 h-2 rounded-full';
+            
+            if(status === 'loading') {
+                dot.classList.add('bg-yellow-500', 'animate-pulse'); txt.textContent = 'Conectando...'; txt.className = 'text-[10px] font-bold text-yellow-500 uppercase tracking-wider';
+            } else if (status === 'success') {
+                dot.classList.add('bg-emerald-500'); txt.textContent = 'Cloud Sync'; txt.className = 'text-[10px] font-bold text-emerald-500 uppercase tracking-wider';
+                isCloudActive = true;
+            } else {
+                dot.classList.add('bg-red-500'); txt.textContent = 'Modo Local'; txt.className = 'text-[10px] font-bold text-red-500 uppercase tracking-wider';
+                isCloudActive = false;
+            }
+        }
+
+        async function initFirebase() {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                await signInAnonymously(auth);
+                setupRealtimeListeners();
+            } catch (error) {
+                console.warn("Firebase Auth falló, usando LocalStorage.", error);
+                if(error.code === 'auth/operation-not-allowed') {
+                    showToast('Firebase: Activa "Anónimo" en Authentication', 'error');
+                }
+                updateSyncStatus('error');
+                autoSelectDay();
+            }
+        }
+
+        function setupRealtimeListeners() {
+            if (!auth.currentUser) return;
+            
+            // Intento de conexión Firestore
+            const unsubscribeEx = onSnapshot(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'exerciseHistory'), 
+                (snapshot) => {
+                    globalExerciseHistory = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+                    updateSyncStatus('success');
+                    if (window.currentDay === 'progreso') renderProgress(); else renderExercises(window.currentDay);
+                },
+                (error) => { console.warn("Faltan permisos Firestore", error); updateSyncStatus('error'); }
+            );
+
+            const unsubscribeBw = onSnapshot(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'bodyWeights'), 
+                (snapshot) => {
+                    globalBodyWeights = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+                    if (window.currentDay === 'progreso') renderProgress();
+                },
+                (error) => { updateSyncStatus('error'); }
+            );
+            
+            autoSelectDay();
+        }
 
         function getLocalISODate() {
             const tzOffset = (new Date()).getTimezoneOffset() * 60000;
@@ -305,51 +401,14 @@
             document.getElementById('dynamic-greeting').textContent = `${timeGreeting}, ${window.currentUser} 💪`;
         }
 
-        const defaultFirebaseConfig = {
-            apiKey: "AIzaSyDo8bDMUCkWWa13S1wlia-rO4UF0c4mNBo",
-            authDomain: "trackfit-database-83ab5.firebaseapp.com",
-            projectId: "trackfit-database-83ab5",
-            storageBucket: "trackfit-database-83ab5.firebasestorage.app",
-            messagingSenderId: "233927465610",
-            appId: "1:233927465610:web:f8569dad5596ca2c356b73"
-        };
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'trackfit-pro-v1';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : defaultFirebaseConfig;
-
-        async function initFirebase() {
-            try {
-                if (Object.keys(firebaseConfig).length === 0 || firebaseConfig.apiKey === "TU_API_KEY") {
-                    console.warn("Ejecutando en LocalStorage (Falta configurar Firebase).");
-                    document.getElementById('app-loader').classList.add('hidden');
-                    autoSelectDay(); return;
-                }
-                app = initializeApp(firebaseConfig); db = getFirestore(app); auth = getAuth(app);
-                const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                if (token) await signInWithCustomToken(auth, token); else await signInAnonymously(auth);
-                setupRealtimeListeners();
-            } catch (error) {
-                document.getElementById('app-loader').classList.add('hidden'); autoSelectDay();
-            }
-        }
-
-        function setupRealtimeListeners() {
-            if (!auth.currentUser) return;
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'exerciseHistory'), (snapshot) => {
-                globalExerciseHistory = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-                if (window.currentDay === 'progreso') renderProgress(); else renderExercises(window.currentDay);
-            });
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'bodyWeights'), (snapshot) => {
-                globalBodyWeights = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-                if (window.currentDay === 'progreso') renderProgress();
-                document.getElementById('app-loader').classList.add('hidden');
-            });
-        }
-
         function autoSelectDay() {
-            const today = new Date().getDay(); 
-            const daysMap = { 1: 'lunes', 2: 'martes', 3: 'miercoles', 4: 'jueves', 5: 'viernes' };
-            if (daysMap[today]) window.currentDay = daysMap[today];
-            else window.currentDay = 'progreso';
+            if(!hasAutoSelectedDay) {
+                const today = new Date().getDay(); 
+                const daysMap = { 1: 'lunes', 2: 'martes', 3: 'miercoles', 4: 'jueves', 5: 'viernes' };
+                if (daysMap[today]) window.currentDay = daysMap[today];
+                else window.currentDay = 'progreso';
+                hasAutoSelectedDay = true;
+            }
             document.getElementById('training-date').value = getLocalISODate();
             document.getElementById('bw-date').value = getLocalISODate();
             updateGreeting();
@@ -363,7 +422,7 @@
             document.getElementById('btn-user-Max').classList.toggle('active-user', user === 'Max');
             document.getElementById('btn-user-Pipe').classList.toggle('active-user', user === 'Pipe');
             updateGreeting();
-            showToast(`👤 Perfil de ${user} activo.`);
+            showToast(`👤 Perfil cambiado a ${user}`);
             if (window.currentDay === 'progreso') renderProgress(); else renderExercises(window.currentDay);
         }
 
@@ -391,7 +450,7 @@
             let timeLeft = seconds; showToast(`⏱ Descanso: ${timeLeft}s`);
             timerInterval = setInterval(() => {
                 timeLeft--;
-                if (timeLeft <= 0) { clearInterval(timerInterval); window.playBeep(); showToast('🔥 ¡TIEMPO! A darle a la serie.'); }
+                if (timeLeft <= 0) { clearInterval(timerInterval); window.playBeep(); showToast('🔥 ¡TIEMPO! A la serie.'); }
             }, 1000);
         }
 
@@ -415,37 +474,30 @@
             }
         }
 
-        function getSavedExerciseData(dayId, index, dateVal) {
-            if(firebaseConfig.apiKey !== "TU_API_KEY") {
-                return globalExerciseHistory.find(e => e.user === window.currentUser && e.dayId === dayId && e.exerciseIndex === index && e.dateStr === dateVal);
+        // Helper para obtener datos unificados (Nube o Local)
+        function getMergedHistory(user, dayId, index) {
+            if(isCloudActive) {
+                return globalExerciseHistory.filter(e => e.user === user && e.dayId === dayId && e.exerciseIndex === index).sort((a,b)=>a.timestamp-b.timestamp);
             }
-            let hist = JSON.parse(localStorage.getItem(`tf_pro_hist_${window.currentUser}_${dayId}_${index}`)) || [];
+            return (JSON.parse(localStorage.getItem(`tf_pro_hist_${user}_${dayId}_${index}`)) || []).sort((a,b)=>a.timestamp-b.timestamp);
+        }
+
+        function getSavedExerciseData(dayId, index, dateVal) {
+            let hist = getMergedHistory(window.currentUser, dayId, index);
             return hist.find(e => e.dateStr === dateVal);
         }
 
-        function getLastKnownExerciseData(dayId, index, dateVal) {
-            let past = [];
-            if(firebaseConfig.apiKey !== "TU_API_KEY") {
-                past = globalExerciseHistory.filter(e => e.user === window.currentUser && e.dayId === dayId && e.exerciseIndex === index && e.dateStr < dateVal);
-            } else {
-                let hist = JSON.parse(localStorage.getItem(`tf_pro_hist_${window.currentUser}_${dayId}_${index}`)) || [];
-                past = hist.filter(e => e.dateStr < dateVal);
-            }
-            past.sort((a,b) => a.timestamp - b.timestamp);
-            return past.length > 0 ? past[past.length-1] : null;
-        }
-
-        window.saveWeight = async function(dayId, index, showMsg = true) {
+        window.saveWeight = async function(dayId, index) {
             const dateVal = document.getElementById('training-date').value;
             const input = document.getElementById(`weight-${dayId}-${index}`);
             const unit = document.getElementById(`unit-${dayId}-${index}`).value;
             const val = parseFloat(input.value.trim());
             
-            if(!dateVal) { if(showMsg) showToast("Fecha inválida", "error"); return; }
+            if(!dateVal) { showToast("Fecha inválida", "error"); return; }
             const timestamp = new Date(dateVal + 'T12:00:00').getTime();
             const weekNum = getWeekNumber(dateVal);
             
-            // Backup en LocalStorage
+            // 1. Guardado LOCAL (Siempre)
             let lsHist = JSON.parse(localStorage.getItem(`tf_pro_hist_${window.currentUser}_${dayId}_${index}`)) || [];
             if(isNaN(val)) { lsHist = lsHist.filter(e => e.dateStr !== dateVal); } 
             else {
@@ -455,19 +507,46 @@
             }
             localStorage.setItem(`tf_pro_hist_${window.currentUser}_${dayId}_${index}`, JSON.stringify(lsHist));
 
-            // Guardado Firebase
-            if (firebaseConfig.apiKey !== "TU_API_KEY" && auth?.currentUser) {
+            // 2. Guardado NUBE (Si está activo)
+            if (isCloudActive && auth?.currentUser) {
                 const existing = globalExerciseHistory.find(e => e.user === window.currentUser && e.dayId === dayId && e.exerciseIndex === index && e.dateStr === dateVal);
                 try {
-                    if(isNaN(val) && existing) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'exerciseHistory', existing.id));
-                    else if(!isNaN(val)) {
+                    if(!isNaN(val)) {
                         const dataObj = { user: window.currentUser, dayId, exerciseIndex: index, dateStr: dateVal, weight: val, unit: unit, timestamp, week: weekNum };
-                        if(existing) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'exerciseHistory', existing.id), dataObj);
-                        else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'exerciseHistory'), dataObj);
+                        if(existing) await updateDoc(doc(db, 'artifacts', collectionAppId, 'public', 'data', 'exerciseHistory', existing.id), dataObj);
+                        else await addDoc(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'exerciseHistory'), dataObj);
                     }
-                } catch(e) { console.error(e); }
+                } catch(e) { console.error("Error nube:", e); }
             }
-            if(showMsg && !isNaN(val)) showToast('💾 Peso Registrado');
+            if(!isNaN(val)) showToast('💾 Guardado');
+            if(!isCloudActive) updateCharts(); // Forzar update visual en local
+        }
+
+        window.saveBodyWeight = async function() {
+            const dateVal = document.getElementById('bw-date').value;
+            const weightVal = parseFloat(document.getElementById('bw-weight').value);
+            if(!dateVal || isNaN(weightVal)) { showToast("Ingresa peso válido", "error"); return; }
+            const timestamp = new Date(dateVal + 'T12:00:00').getTime();
+
+            // 1. Local
+            let bwHist = JSON.parse(localStorage.getItem(`tf_pro_bw_${window.currentUser}`)) || [];
+            let idx = bwHist.findIndex(e => e.dateStr === dateVal);
+            if(idx >= 0) bwHist[idx].weight = weightVal; else bwHist.push({dateStr: dateVal, weight: weightVal, timestamp});
+            bwHist.sort((a,b)=>a.timestamp-b.timestamp);
+            localStorage.setItem(`tf_pro_bw_${window.currentUser}`, JSON.stringify(bwHist));
+
+            // 2. Nube
+            if (isCloudActive && auth?.currentUser) {
+                const existing = globalBodyWeights.find(e => e.user === window.currentUser && e.dateStr === dateVal);
+                try {
+                    const dataObj = { user: window.currentUser, dateStr: dateVal, weight: weightVal, timestamp };
+                    if(existing) await updateDoc(doc(db, 'artifacts', collectionAppId, 'public', 'data', 'bodyWeights', existing.id), dataObj);
+                    else await addDoc(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'bodyWeights'), dataObj);
+                } catch(e) {}
+            }
+            showToast("✅ Peso registrado");
+            document.getElementById('bw-weight').value = "";
+            updateCharts();
         }
 
         window.renderTabs = function() {
@@ -477,14 +556,16 @@
                 const btn = document.createElement('button');
                 btn.className = `tab-btn flex-shrink-0 w-full md:w-auto text-left px-4 py-3 rounded-xl border border-slate-700/50 text-slate-300 mb-2 flex items-center justify-between ${dayId === window.currentDay ? 'active' : 'hover:bg-slate-800'}`;
                 btn.innerHTML = `<span class="font-semibold text-sm">${dayName}</span>`;
-                btn.onclick = () => { window.currentDay = dayId; renderTabs(); renderExercises(dayId); };
+                btn.onclick = () => { window.currentDay = dayId; window.renderTabs(); window.renderExercises(dayId); };
                 container.appendChild(btn);
             });
+
             const sep = document.createElement('div'); sep.className = "w-full h-px bg-slate-800 my-2 hidden md:block"; container.appendChild(sep);
+
             const btnProg = document.createElement('button');
             btnProg.className = `tab-btn flex-shrink-0 w-full md:w-auto text-left px-4 py-3 rounded-xl border border-slate-600/50 text-slate-200 shadow-lg bg-slate-800/50 ${window.currentDay === 'progreso' ? 'active' : 'hover:bg-slate-700/50'}`;
             btnProg.innerHTML = `<span class="font-bold text-sm flex items-center gap-2">📈 Ver Avances</span>`;
-            btnProg.onclick = () => { window.currentDay = 'progreso'; renderTabs(); renderProgress(); };
+            btnProg.onclick = () => { window.currentDay = 'progreso'; window.renderTabs(); window.renderProgress(); };
             container.appendChild(btnProg);
         }
 
@@ -501,91 +582,52 @@
             container.innerHTML = ''; 
             
             dayData.exercises.forEach((ex, index) => {
-                const currentData = getSavedExerciseData(dayId, index, selectedDate);
-                const lastData = getLastKnownExerciseData(dayId, index, selectedDate);
-                const val = currentData ? currentData.weight : '';
-                const unit = currentData ? currentData.unit : (lastData ? lastData.unit : 'kg');
-                const placeholder = lastData ? `Antes: ${lastData.weight} ${lastData.unit}` : "Ej. 45";
+                const saved = getSavedExerciseData(dayId, index, selectedDate);
+                const currentWeight = saved ? saved.weight : '';
+                const currentUnit = saved ? saved.unit : 'kg';
                 
                 const card = document.createElement('div');
-                card.className = 'glass-card rounded-2xl flex flex-col p-5 relative border-t-2 border-t-theme-500/50';
-                
-                let unitSelectorHtml = `
-                    <div class="flex items-center gap-1 bg-slate-900/50 rounded-lg p-1 border border-slate-700">
-                        <button onclick="toggleUnit('${dayId}', ${index}, 'kg')" id="btn-kg-${dayId}-${index}" class="px-3 py-1.5 rounded-md text-[11px] font-bold transition-colors ${unit === 'kg' ? 'bg-emerald-500 text-white shadow-sm' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}">KG</button>
-                        <button onclick="toggleUnit('${dayId}', ${index}, 'lbs')" id="btn-lbs-${dayId}-${index}" class="px-3 py-1.5 rounded-md text-[11px] font-bold transition-colors ${unit === 'lbs' ? 'bg-emerald-500 text-white shadow-sm' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}">LBS</button>
-                    </div>
-                `;
-
+                card.className = 'glass-card rounded-2xl flex flex-col p-5 border-t-2 border-t-theme-500/50';
                 card.innerHTML = `
                     <div class="flex flex-col mb-4">
-                        <div class="flex justify-between items-start w-full">
-                            <h3 class="text-base font-bold text-white leading-tight w-3/4">${ex.name}</h3>
-                            <span class="bg-theme-500/10 text-theme-400 text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded border border-theme-500/30 whitespace-nowrap ml-2">${ex.muscle}</span>
+                        <div class="flex justify-between items-start gap-2 mb-1">
+                            <h3 class="text-base font-bold text-white leading-tight">${ex.name}</h3>
+                            <span class="bg-theme-500/10 text-theme-400 text-[9px] uppercase tracking-wider font-bold px-2 py-1 rounded border border-theme-500/30 whitespace-nowrap flex-shrink-0">${ex.muscle}</span>
                         </div>
-                        <p class="text-[11px] text-slate-400 mt-1">⚙️ ${ex.equipment}</p>
+                        <p class="text-[11px] text-slate-400">⚙️ ${ex.equipment}</p>
                     </div>
                     
                     <div class="grid grid-cols-2 gap-3 mb-5">
                         <div class="bg-slate-900/80 rounded-lg p-2 text-center border border-slate-700/50">
-                            <span class="block text-[9px] text-slate-400 uppercase tracking-widest mb-1">Series</span><strong class="text-sm text-white">${ex.sets}</strong>
+                            <span class="block text-[9px] text-slate-400 uppercase tracking-widest mb-1">Series</span>
+                            <strong class="text-sm text-white">${ex.sets}</strong>
                         </div>
                         <div class="bg-slate-900/80 rounded-lg p-2 text-center border border-slate-700/50">
-                            <span class="block text-[9px] text-slate-400 uppercase tracking-widest mb-1">Reps</span><strong class="text-xs text-theme-400">${ex.reps}</strong>
+                            <span class="block text-[9px] text-slate-400 uppercase tracking-widest mb-1">Reps</span>
+                            <strong class="text-sm text-theme-400">${ex.reps}</strong>
                         </div>
                     </div>
 
+                    <!-- REESTRUCTURACIÓN DEL ESPACIO INFERIOR -->
                     <div class="mt-auto border-t border-slate-700/50 pt-4 flex flex-col gap-3">
-                        <label class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Carga de Trabajo:</label>
-                        <div class="flex flex-col sm:flex-row gap-2 w-full">
-                            <div class="flex gap-2 flex-1">
-                                <input type="number" step="0.1" inputmode="decimal" id="weight-${dayId}-${index}" value="${val}" placeholder="${placeholder}" class="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-theme-500 transition-colors min-w-0">
-                                ${unitSelectorHtml}
+                        <label class="block text-[10px] text-slate-400 uppercase tracking-widest mb-0.5">Carga de trabajo:</label>
+                        <div class="flex items-center gap-2 w-full">
+                            <input type="hidden" id="unit-${dayId}-${index}" value="${currentUnit}">
+                            <input type="number" step="0.5" inputmode="decimal" id="weight-${dayId}-${index}" value="${currentWeight}" placeholder="Ej. 45" class="flex-1 w-0 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-theme-500 transition-colors">
+                            <div class="flex bg-slate-900 rounded-lg p-1 border border-slate-700 flex-shrink-0">
+                                <button type="button" id="btn-kg-${dayId}-${index}" onclick="toggleUnit('${dayId}', ${index}, 'kg')" class="px-3 py-1.5 rounded-md text-[11px] font-bold transition-colors ${currentUnit==='kg'?'bg-emerald-500 text-white shadow-sm':'bg-slate-800 text-slate-400 hover:bg-slate-700'}">KG</button>
+                                <button type="button" id="btn-lbs-${dayId}-${index}" onclick="toggleUnit('${dayId}', ${index}, 'lbs')" class="px-3 py-1.5 rounded-md text-[11px] font-bold transition-colors ${currentUnit==='lbs'?'bg-emerald-500 text-white shadow-sm':'bg-slate-800 text-slate-400 hover:bg-slate-700'}">LBS</button>
                             </div>
-                            <input type="hidden" id="unit-${dayId}-${index}" value="${unit}">
-                            <button onclick="saveWeight('${dayId}', ${index})" class="bg-theme-600 hover:bg-theme-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-lg shadow-theme-500/20 w-full sm:w-auto">Guardar</button>
                         </div>
-                        <button onclick="startTimer(${ex.restTime})" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors border border-slate-600 mt-1">
-                            ⏱ Descanso (${ex.restTime}s)
-                        </button>
+                        
+                        <div class="flex gap-2 w-full mt-1">
+                            <button onclick="startTimer(${ex.restTime})" class="w-2/3 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors border border-slate-600 shadow-sm">⏱ Descanso (${ex.restTime}s)</button>
+                            <button onclick="saveWeight('${dayId}', ${index})" class="w-1/3 bg-theme-600 hover:bg-theme-500 text-white py-2.5 rounded-xl text-xs font-bold transition-colors shadow-lg shadow-theme-500/20">Guardar</button>
+                        </div>
                     </div>
                 `;
                 container.appendChild(card);
             });
-        }
-
-        window.saveBodyWeight = async function() {
-            const dateVal = document.getElementById('bw-date').value;
-            const weightVal = parseFloat(document.getElementById('bw-weight').value);
-            if(!dateVal || isNaN(weightVal)) { showToast("Ingresa fecha y peso válidos", "error"); return; }
-            
-            const timestamp = new Date(dateVal + 'T12:00:00').getTime();
-            
-            // LocalStorage
-            let lsBw = JSON.parse(localStorage.getItem(`tf_pro_bw_${window.currentUser}`)) || [];
-            let bwIdx = lsBw.findIndex(e => e.dateStr === dateVal);
-            if(bwIdx >= 0) lsBw[bwIdx].weight = weightVal;
-            else lsBw.push({dateStr: dateVal, weight: weightVal, unit: 'kg', timestamp: timestamp});
-            localStorage.setItem(`tf_pro_bw_${window.currentUser}`, JSON.stringify(lsBw));
-
-            // Firebase
-            if (firebaseConfig.apiKey !== "TU_API_KEY" && auth?.currentUser) {
-                const existing = globalBodyWeights.find(e => e.user === window.currentUser && e.dateStr === dateVal);
-                const dataObj = { user: window.currentUser, dateStr: dateVal, weight: weightVal, unit: 'kg', timestamp: timestamp };
-                try {
-                    if (existing) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bodyWeights', existing.id), dataObj);
-                    else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'bodyWeights'), dataObj);
-                } catch(e) { console.error(e); }
-            }
-            showToast("⚖️ Peso corporal guardado");
-            document.getElementById('bw-weight').value = "";
-            renderProgress(); // Actualiza gráfica automático
-        }
-
-        function toKg(weight, unit) {
-            if (typeof weight !== 'number') weight = parseFloat(weight);
-            if (isNaN(weight)) return 0;
-            return unit === 'lbs' ? weight * 0.453592 : weight;
         }
 
         window.renderProgress = function() {
@@ -594,234 +636,229 @@
             updateCharts();
         }
 
+        function extractWeightInKg(entry) {
+            if(!entry) return 0;
+            let val = parseFloat(entry.weight) || 0;
+            if(entry.unit === 'lbs') val = val * 0.453592;
+            return val;
+        }
+
         function updateCharts() {
             Chart.defaults.color = '#94a3b8'; Chart.defaults.font.family = 'Inter';
             
-            // 1. DATA DE PESO CORPORAL (Extracción híbrida Local/Firebase)
-            let bwMax = [], bwPipe = [];
-            if(firebaseConfig.apiKey !== "TU_API_KEY") {
-                bwMax = globalBodyWeights.filter(e => e.user === 'Max').sort((a,b) => a.timestamp - b.timestamp);
-                bwPipe = globalBodyWeights.filter(e => e.user === 'Pipe').sort((a,b) => a.timestamp - b.timestamp);
-            } else {
-                bwMax = (JSON.parse(localStorage.getItem(`tf_pro_bw_Max`)) || []).sort((a,b) => a.timestamp - b.timestamp);
-                bwPipe = (JSON.parse(localStorage.getItem(`tf_pro_bw_Pipe`)) || []).sort((a,b) => a.timestamp - b.timestamp);
-            }
+            // 1. DATA BW
+            const bwMax = isCloudActive ? globalBodyWeights.filter(e=>e.user==='Max').sort((a,b)=>a.timestamp-b.timestamp) : (JSON.parse(localStorage.getItem(`tf_pro_bw_Max`)) || []);
+            const bwPipe = isCloudActive ? globalBodyWeights.filter(e=>e.user==='Pipe').sort((a,b)=>a.timestamp-b.timestamp) : (JSON.parse(localStorage.getItem(`tf_pro_bw_Pipe`)) || []);
             const allBwDates = [...new Set([...bwMax.map(e=>e.dateStr), ...bwPipe.map(e=>e.dateStr)])].sort();
-            const bwMaxData = allBwDates.map(d => { const e = bwMax.find(x=>x.dateStr===d); return e ? toKg(e.weight, e.unit||'kg') : null; });
-            const bwPipeData = allBwDates.map(d => { const e = bwPipe.find(x=>x.dateStr===d); return e ? toKg(e.weight, e.unit||'kg') : null; });
+            
+            const bwMaxData = allBwDates.map(d => { const e = bwMax.find(x=>x.dateStr===d); return e ? e.weight : null; });
+            const bwPipeData = allBwDates.map(d => { const e = bwPipe.find(x=>x.dateStr===d); return e ? e.weight : null; });
 
             renderChartInstance('weightChart', allBwDates, [
                 {label: 'Max (kg)', data: bwMaxData, color: userColors['Max']},
                 {label: 'Pipe (kg)', data: bwPipeData, color: userColors['Pipe']}
             ], true);
 
-            // Resumen Textual BW
+            // Resumen Textual BW Inteligente
             let summaryHtml = '';
             if(bwMax.length > 0) {
-                const first = bwMax[0]; const last = bwMax[bwMax.length-1]; 
-                const diff = (toKg(last.weight, last.unit||'kg') - toKg(first.weight, first.unit||'kg')).toFixed(1);
-                summaryHtml += `<div class="flex justify-between items-center text-slate-300"><span class="font-semibold text-orange-400">Max:</span> <span>Inicial: ${first.weight}kg ➔ Actual: ${last.weight}kg <strong class="${diff>=0?'text-emerald-400':'text-red-400'}">(${diff>=0?'+':''}${diff}kg)</strong></span></div>`;
+                const first = bwMax[0].weight; const last = bwMax[bwMax.length-1].weight; const diff = (last-first).toFixed(1);
+                summaryHtml += `<div class="flex justify-between items-center text-slate-300"><span class="font-semibold text-orange-400">Max:</span> <span>Inicial: ${first}kg ➔ Actual: ${last}kg <strong class="${diff>=0?'text-emerald-400':'text-red-400'}">(${diff>=0?'+':''}${diff}kg)</strong></span></div>`;
             }
             if(bwPipe.length > 0) {
-                const first = bwPipe[0]; const last = bwPipe[bwPipe.length-1]; 
-                const diff = (toKg(last.weight, last.unit||'kg') - toKg(first.weight, first.unit||'kg')).toFixed(1);
-                summaryHtml += `<div class="flex justify-between items-center text-slate-300 border-t border-slate-700/50 pt-1 mt-1"><span class="font-semibold text-red-400">Pipe:</span> <span>Inicial: ${first.weight}kg ➔ Actual: ${last.weight}kg <strong class="${diff>=0?'text-emerald-400':'text-red-400'}">(${diff>=0?'+':''}${diff}kg)</strong></span></div>`;
+                const first = bwPipe[0].weight; const last = bwPipe[bwPipe.length-1].weight; const diff = (last-first).toFixed(1);
+                summaryHtml += `<div class="flex justify-between items-center text-slate-300 border-t border-slate-700/50 pt-1 mt-1"><span class="font-semibold text-red-400">Pipe:</span> <span>Inicial: ${first}kg ➔ Actual: ${last}kg <strong class="${diff>=0?'text-emerald-400':'text-red-400'}">(${diff>=0?'+':''}${diff}kg)</strong></span></div>`;
             }
-            if(!summaryHtml) summaryHtml = '<p class="text-slate-500 italic text-center">Registren pesos para ver el progreso.</p>';
+            if(!summaryHtml) summaryHtml = '<p class="text-slate-500 italic">No hay registros corporales aún.</p>';
             document.getElementById('bw-summary').innerHTML = summaryHtml;
 
-            // 2. DATA DE FUERZA SEMANAL
+            // 2. DATA FUERZA
+            const wDataMax = getWeeklyStrengthData('Max');
+            const wDataPipe = getWeeklyStrengthData('Pipe');
             const currentRealWeek = getWeekNumber(getLocalISODate());
             const weekLabels = Array.from({length: currentRealWeek}, (_, i) => `Sem ${i+1}`);
-            const wDataMax = getWeeklyStrengthData('Max', currentRealWeek);
-            const wDataPipe = getWeeklyStrengthData('Pipe', currentRealWeek);
+            const alignData = (dataArr) => { let aligned = new Array(currentRealWeek).fill(null); dataArr.forEach((val, i) => { if(i < currentRealWeek) aligned[i] = val; }); return aligned; };
 
             renderChartInstance('weeklyChart', weekLabels, [
-                {label: 'Max (Fuerza kg)', data: wDataMax, color: userColors['Max']},
-                {label: 'Pipe (Fuerza kg)', data: wDataPipe, color: userColors['Pipe']}
+                {label: 'Max (Fuerza)', data: alignData(wDataMax), color: userColors['Max']},
+                {label: 'Pipe (Fuerza)', data: alignData(wDataPipe), color: userColors['Pipe']}
             ], false);
 
-            // 3. BALANCE MUSCULAR (Radar)
-            const radarLabels = ['Pecho', 'Espalda', 'Pierna/Glúteo', 'Hombro', 'Brazos', 'Core'];
-            renderRadarChart('radarChart', radarLabels, [
-                {label: 'Max', data: getMuscleBalanceData('Max'), color: userColors['Max']},
-                {label: 'Pipe', data: getMuscleBalanceData('Pipe'), color: userColors['Pipe']}
-            ]);
-
-            // Reset UI Historial Diario
-            const dps = document.getElementById('day-progress-select');
-            if(dps.value) renderDayProgress(dps.value);
-            else document.getElementById('day-progress-list').innerHTML = `<div class="text-center text-slate-500 py-6 border border-dashed border-slate-700 rounded-xl text-sm mt-4">Selecciona una rutina arriba.</div>`;
+            renderRadarChart();
+            
+            // Re-renderizar lista si hay un día seleccionado
+            const sel = document.getElementById('day-progress-select').value;
+            if(sel) window.renderDayProgress(sel);
         }
 
-        function getWeeklyStrengthData(user, totalWeeks) {
+        function getWeeklyStrengthData(user) {
             let weeklyMap = {};
-            if(firebaseConfig.apiKey !== "TU_API_KEY") {
-                globalExerciseHistory.filter(e => e.user === user).forEach(entry => {
-                    const w = toKg(entry.weight, entry.unit);
-                    if (!weeklyMap[entry.week]) weeklyMap[entry.week] = []; weeklyMap[entry.week].push(w);
-                });
-            } else {
-                Object.keys(routineData).forEach(dayId => {
-                    routineData[dayId].exercises.forEach((ex, i) => {
-                        let hist = JSON.parse(localStorage.getItem(`tf_pro_hist_${user}_${dayId}_${i}`)) || [];
-                        hist.forEach(e => { const w = toKg(e.weight, e.unit); if (!weeklyMap[e.week]) weeklyMap[e.week] = []; weeklyMap[e.week].push(w); });
+            Object.keys(routineData).forEach(dayId => {
+                routineData[dayId].exercises.forEach((ex, index) => {
+                    let hist = getMergedHistory(user, dayId, index);
+                    hist.forEach(entry => {
+                        const w = extractWeightInKg(entry);
+                        if (!weeklyMap[entry.week]) weeklyMap[entry.week] = [];
+                        weeklyMap[entry.week].push(w);
                     });
                 });
+            });
+            let result = []; const weeks = Object.keys(weeklyMap).sort((a,b)=>a-b);
+            if(weeks.length === 0) return [];
+            let highestWeek = parseInt(weeks[weeks.length-1]);
+            for(let i=1; i<=highestWeek; i++) {
+                if(weeklyMap[i]) result[i-1] = Math.round(weeklyMap[i].reduce((a,b)=>a+b, 0)); 
+                else result[i-1] = null;
             }
-            let result = new Array(totalWeeks).fill(null);
-            for(let w in weeklyMap) { if(w-1 < totalWeeks) result[w-1] = weeklyMap[w].reduce((a,b)=>a+b, 0); }
             return result;
         }
 
-        function getMuscleBalanceData(user) {
-            const catSum = { 'Pecho': 0, 'Espalda': 0, 'Pierna/Glúteo': 0, 'Hombro': 0, 'Brazos': 0, 'Core': 0 };
-            const mapMuscleToCategory = (m) => {
-                m = m.toLowerCase();
-                if(m.includes('pecho')) return 'Pecho';
-                if(m.includes('espalda') || m.includes('lumbar') || m.includes('dorsal')) return 'Espalda';
-                if(m.includes('cuádriceps') || m.includes('glúteo') || m.includes('gemelo') || m.includes('isquio') || m.includes('sóleo')) return 'Pierna/Glúteo';
-                if(m.includes('hombro') || m.includes('deltoide')) return 'Hombro';
-                if(m.includes('bíceps') || m.includes('tríceps') || m.includes('antebrazo')) return 'Brazos';
-                if(m.includes('abdomen') || m.includes('core')) return 'Core'; return null;
-            };
+        function renderRadarChart() {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            if(chartInstances['radarChart']) chartInstances['radarChart'].destroy();
 
-            if(firebaseConfig.apiKey !== "TU_API_KEY") {
-                globalExerciseHistory.filter(e => e.user === user).forEach(entry => {
-                    const dayData = routineData[entry.dayId];
-                    if(dayData && dayData.exercises[entry.exerciseIndex]) {
-                        const cat = mapMuscleToCategory(dayData.exercises[entry.exerciseIndex].muscle);
-                        if(cat) catSum[cat] += toKg(entry.weight, entry.unit); 
-                    }
-                });
-            } else {
+            const getMuscleStrength = (user) => {
+                let mScores = { 'Pecho': 0, 'Espalda': 0, 'Pierna': 0, 'Hombro': 0, 'Brazos': 0, 'Core': 0 };
                 Object.keys(routineData).forEach(dayId => {
-                    routineData[dayId].exercises.forEach((ex, i) => {
-                        const cat = mapMuscleToCategory(ex.muscle);
-                        if(cat) {
-                            let hist = JSON.parse(localStorage.getItem(`tf_pro_hist_${user}_${dayId}_${i}`)) || [];
-                            hist.forEach(e => { catSum[cat] += toKg(e.weight, e.unit); });
+                    routineData[dayId].exercises.forEach((ex, index) => {
+                        let hist = getMergedHistory(user, dayId, index);
+                        let maxW = 0;
+                        hist.forEach(e => { const w = extractWeightInKg(e); if(w > maxW) maxW = w; });
+                        if(maxW > 0) {
+                            let cat = 'Core';
+                            if(ex.muscle.includes('Pecho')) cat = 'Pecho';
+                            else if(ex.muscle.includes('Espalda') || ex.muscle.includes('Dorsal')) cat = 'Espalda';
+                            else if(ex.muscle.includes('Cuádriceps') || ex.muscle.includes('Glúteo') || ex.muscle.includes('Isquios') || ex.muscle.includes('Gemelos')) cat = 'Pierna';
+                            else if(ex.muscle.includes('Hombro')) cat = 'Hombro';
+                            else if(ex.muscle.includes('Bíceps') || ex.muscle.includes('Tríceps') || ex.muscle.includes('Antebrazo')) cat = 'Brazos';
+                            mScores[cat] += maxW;
                         }
                     });
                 });
-            }
-            return [catSum['Pecho'], catSum['Espalda'], catSum['Pierna/Glúteo'], catSum['Hombro'], catSum['Brazos'], catSum['Core']];
+                return Object.values(mScores);
+            };
+
+            chartInstances['radarChart'] = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Pecho', 'Espalda', 'Pierna', 'Hombro', 'Brazos', 'Core'],
+                    datasets: [
+                        { label: 'Max', data: getMuscleStrength('Max'), backgroundColor: userColors['Max'] + '30', borderColor: userColors['Max'], borderWidth: 2, pointRadius: 3 },
+                        { label: 'Pipe', data: getMuscleStrength('Pipe'), backgroundColor: userColors['Pipe'] + '30', borderColor: userColors['Pipe'], borderWidth: 2, pointRadius: 3 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { r: { grid: { color: '#334155' }, angleLines: { color: '#334155' }, ticks: { display: false } } } }
+            });
         }
 
         function renderChartInstance(canvasId, labels, datasetsConfig, spanGaps) {
             const ctx = document.getElementById(canvasId).getContext('2d');
             if(chartInstances[canvasId]) chartInstances[canvasId].destroy();
+
             const datasets = datasetsConfig.map(ds => ({
-                label: ds.label, data: ds.data.map(val => val ? parseFloat(val.toFixed(1)) : null),
-                borderColor: ds.color, backgroundColor: ds.color + '20', borderWidth: 3, pointBackgroundColor: '#0b1121', pointBorderColor: ds.color,
+                label: ds.label, data: ds.data, borderColor: ds.color, backgroundColor: ds.color + '20',
+                borderWidth: 3, pointBackgroundColor: '#0b1121', pointBorderColor: ds.color,
                 pointRadius: 4, pointHoverRadius: 6, spanGaps: spanGaps, tension: 0.3
             }));
+
             chartInstances[canvasId] = new Chart(ctx, {
                 type: 'line', data: { labels: labels, datasets: datasets },
                 options: {
                     responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-                    plugins: { 
-                        legend: { display: true, position: 'top', labels:{boxWidth: 12} },
-                        tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', titleColor: '#fff', padding: 10,
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || ''; let val = context.parsed.y; let prevVal = null;
-                                    for(let i = context.dataIndex - 1; i >= 0; i--){ if(context.dataset.data[i] !== null) { prevVal = context.dataset.data[i]; break; } }
-                                    let diffStr = prevVal !== null ? `(${val > prevVal ? '+' : ''}${(val - prevVal).toFixed(1)})` : '';
-                                    return `${label}: ${val} ${diffStr}`;
-                                }
-                            }
-                        }
-                    },
+                    plugins: { legend: { display: true, position: 'top', labels:{boxWidth: 12} } },
                     scales: { y: { grid: { color: '#1e293b' } }, x: { grid: { display: false } } }
                 }
             });
         }
 
-        function renderRadarChart(canvasId, labels, datasetsConfig) {
-            const ctx = document.getElementById(canvasId).getContext('2d');
-            if(chartInstances[canvasId]) chartInstances[canvasId].destroy();
-            const datasets = datasetsConfig.map(ds => ({
-                label: ds.label, data: ds.data, borderColor: ds.color, backgroundColor: ds.color + '40', borderWidth: 2, pointBackgroundColor: ds.color,
-            }));
-            chartInstances[canvasId] = new Chart(ctx, {
-                type: 'radar', data: { labels: labels, datasets: datasets },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    scales: { r: { angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, pointLabels: { color: '#cbd5e1', font: { family: 'Inter', size: 11 } }, ticks: { display: false } } },
-                    plugins: { legend: { display: true, position: 'bottom', labels:{color: '#cbd5e1'} } }
-                }
-            });
-        }
-
         window.renderDayProgress = function(dayId) {
-            const container = document.getElementById('day-progress-list'); if(!dayId) return;
-            const exercises = routineData[dayId].exercises; let allDates = new Set();
-            
-            // Colección de Fechas (Híbrida)
+            const container = document.getElementById('day-progress-list');
+            if(!dayId) return;
+            const exercises = routineData[dayId].exercises;
+            let allDates = new Set();
+
             exercises.forEach((ex, index) => {
-                if(firebaseConfig.apiKey !== "TU_API_KEY") {
-                    globalExerciseHistory.filter(e => e.dayId === dayId && e.exerciseIndex === index).forEach(e => allDates.add(e.dateStr));
-                } else {
-                    const maxHist = JSON.parse(localStorage.getItem(`tf_pro_hist_Max_${dayId}_${index}`)) || [];
-                    const pipeHist = JSON.parse(localStorage.getItem(`tf_pro_hist_Pipe_${dayId}_${index}`)) || [];
-                    maxHist.forEach(e => allDates.add(e.dateStr)); pipeHist.forEach(e => allDates.add(e.dateStr));
-                }
+                getMergedHistory('Max', dayId, index).forEach(e => allDates.add(e.dateStr));
+                getMergedHistory('Pipe', dayId, index).forEach(e => allDates.add(e.dateStr));
             });
 
             const sortedDates = Array.from(allDates).sort().reverse();
-            if(sortedDates.length === 0) { container.innerHTML = `<div class="bg-slate-800/40 p-6 rounded-xl text-center border border-slate-700 mt-2"><p class="text-slate-400 text-sm">Sin registros para este día.</p></div>`; return; }
+            if(sortedDates.length === 0) { container.innerHTML = `<div class="bg-slate-800/40 p-6 rounded-xl text-center border border-slate-700 mt-2"><p class="text-slate-400 text-sm">Sin registros.</p></div>`; return; }
 
             let htmlStr = '';
             sortedDates.forEach(dateStr => {
                 const weekNum = getWeekNumber(dateStr);
                 htmlStr += `<div class="bg-slate-800/40 border border-slate-700/80 rounded-xl overflow-hidden mt-2"><div class="bg-slate-800 px-3 py-2 border-b border-slate-700 flex justify-between items-center"><h4 class="font-bold text-slate-200 text-sm">📅 ${dateStr} <span class="text-slate-400 font-normal text-xs ml-2">(Sem ${weekNum})</span></h4></div><div class="p-3 divide-y divide-slate-700/50">`;
+
                 exercises.forEach((ex, index) => {
-                    let mEntry, pEntry, mHist = [], pHist = [];
-                    if(firebaseConfig.apiKey !== "TU_API_KEY") {
-                        mEntry = globalExerciseHistory.find(e => e.user === 'Max' && e.dayId === dayId && e.exerciseIndex === index && e.dateStr === dateStr);
-                        pEntry = globalExerciseHistory.find(e => e.user === 'Pipe' && e.dayId === dayId && e.exerciseIndex === index && e.dateStr === dateStr);
-                        mHist = globalExerciseHistory.filter(e => e.user === 'Max' && e.dayId === dayId && e.exerciseIndex === index);
-                        pHist = globalExerciseHistory.filter(e => e.user === 'Pipe' && e.dayId === dayId && e.exerciseIndex === index);
-                    } else {
-                        mHist = JSON.parse(localStorage.getItem(`tf_pro_hist_Max_${dayId}_${index}`)) || [];
-                        pHist = JSON.parse(localStorage.getItem(`tf_pro_hist_Pipe_${dayId}_${index}`)) || [];
-                        mEntry = mHist.find(e => e.dateStr === dateStr); pEntry = pHist.find(e => e.dateStr === dateStr);
-                    }
+                    let mHist = getMergedHistory('Max', dayId, index);
+                    let pHist = getMergedHistory('Pipe', dayId, index);
+                    const mEntry = mHist.find(e => e.dateStr === dateStr); const pEntry = pHist.find(e => e.dateStr === dateStr);
                     if(!mEntry && !pEntry) return;
-                    
-                    const calcDiff = (hist, currEntry) => {
-                        const past = hist.filter(e => e.dateStr < dateStr).sort((a,b)=>a.timestamp - b.timestamp);
-                        if(past.length === 0) return '';
-                        const diffVal = parseFloat((toKg(currEntry.weight, currEntry.unit) - toKg(past[past.length-1].weight, past[past.length-1].unit)).toFixed(1));
-                        if(diffVal > 0) return `<span class="text-emerald-400 text-[10px] ml-1 font-bold">▲+${diffVal}kg</span>`;
-                        if(diffVal < 0) return `<span class="text-red-400 text-[10px] ml-1 font-bold">▼${diffVal}kg</span>`;
+
+                    const calcDiff = (hist, curr) => {
+                        const past = hist.filter(e => e.dateStr < dateStr);
+                        if(past.length===0) return '';
+                        const diff = extractWeightInKg(curr) - extractWeightInKg(past[past.length-1]);
+                        if(diff>0) return `<span class="text-emerald-400 text-[10px] ml-1">▲+${diff.toFixed(1)}</span>`;
+                        if(diff<0) return `<span class="text-red-400 text-[10px] ml-1">▼${diff.toFixed(1)}</span>`;
                         return `<span class="text-slate-500 text-[10px] ml-1">=</span>`;
                     };
 
-                    const formatW = (e) => e ? `<span class="font-bold text-lg">${e.weight}</span><span class="text-[9px] ml-0.5">${e.unit}</span>` : '<span class="text-slate-600">--</span>';
-                    const mWeight = formatW(mEntry) + (mEntry ? calcDiff(mHist, mEntry) : '');
-                    const pWeight = formatW(pEntry) + (pEntry ? calcDiff(pHist, pEntry) : '');
+                    const mWeight = mEntry ? `<span class="font-bold text-orange-400">${mEntry.weight}${mEntry.unit}</span>${calcDiff(mHist, mEntry)}` : '<span class="text-slate-600">--</span>';
+                    const pWeight = pEntry ? `<span class="font-bold text-red-400">${pEntry.weight}${pEntry.unit}</span>${calcDiff(pHist, pEntry)}` : '<span class="text-slate-600">--</span>';
 
-                    htmlStr += `
-                        <div class="py-2 flex flex-col md:flex-row md:justify-between md:items-center text-xs gap-2">
-                            <span class="text-slate-300 font-medium md:w-1/2">${ex.name}</span>
-                            <div class="flex gap-2 w-full md:w-1/2 justify-end">
-                                <div class="flex-1 max-w-[100px] bg-slate-900/80 rounded-lg p-1.5 border border-orange-900/40 flex flex-col items-end justify-center">
-                                    <span class="text-[8px] text-orange-500 font-bold uppercase w-full text-left">Max</span><div class="flex items-baseline">${mWeight}</div>
-                                </div>
-                                <div class="flex-1 max-w-[100px] bg-slate-900/80 rounded-lg p-1.5 border border-red-900/40 flex flex-col items-end justify-center">
-                                    <span class="text-[8px] text-red-500 font-bold uppercase w-full text-left">Pipe</span><div class="flex items-baseline">${pWeight}</div>
-                                </div>
-                            </div>
-                        </div>`;
+                    htmlStr += `<div class="py-2 flex justify-between items-center text-xs"><span class="text-slate-300 font-medium truncate w-1/2 pr-2">${ex.name}</span><div class="w-1/2 flex justify-end gap-3 text-right"><div class="w-1/2 bg-slate-900/50 rounded px-1 py-1 border border-orange-900/30"><span class="block text-[8px] text-orange-500 uppercase">Max</span>${mWeight}</div><div class="w-1/2 bg-slate-900/50 rounded px-1 py-1 border border-red-900/30"><span class="block text-[8px] text-red-500 uppercase">Pipe</span>${pWeight}</div></div></div>`;
                 });
                 htmlStr += `</div></div>`;
             });
             container.innerHTML = htmlStr;
         }
 
-        initFirebase();
+        window.exportData = function() {
+            try {
+                let dataToExport = {};
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith(`tf_pro_`)) dataToExport[key] = localStorage.getItem(key);
+                }
+                const encodedData = btoa(encodeURIComponent(JSON.stringify(dataToExport)));
+                const tempInput = document.createElement("input"); tempInput.value = encodedData; document.body.appendChild(tempInput);
+                tempInput.select(); document.execCommand("copy"); document.body.removeChild(tempInput);
+                showToast("✅ Copiado. Envíalo por WhatsApp.");
+            } catch (err) { showToast("Error al exportar", "error"); }
+        }
+
+        window.importData = function() {
+            const inputField = document.getElementById('import-code');
+            const code = inputField.value.trim();
+            if(!code) { showToast("Pega el código", "error"); return; }
+            
+            try {
+                const decodedStr = decodeURIComponent(atob(code));
+                const dataToImport = JSON.parse(decodedStr);
+                
+                for (const key in dataToImport) {
+                    if(key.startsWith('tf_pro_')) {
+                        if(key.includes('_hist_') || key.includes('_bw_')) {
+                            const localData = JSON.parse(localStorage.getItem(key)) || [];
+                            const importedData = JSON.parse(dataToImport[key]) || [];
+                            const mergedMap = new Map();
+                            localData.forEach(e => mergedMap.set(e.dateStr, e));
+                            importedData.forEach(e => mergedMap.set(e.dateStr, e));
+                            const mergedArray = Array.from(mergedMap.values()).sort((a,b)=>a.timestamp - b.timestamp);
+                            localStorage.setItem(key, JSON.stringify(mergedArray));
+                        } else localStorage.setItem(key, dataToImport[key]);
+                    }
+                }
+                inputField.value = ""; showToast(`✅ Importado con éxito.`); updateCharts(); 
+            } catch (err) { showToast("Código inválido", "error"); }
+        }
+
+        window.onload = () => {
+            updateSyncStatus('loading');
+            initFirebase();
+        };
     </script>
 </body>
 </html>
