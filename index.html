@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TrackFit Pro</title>
     
-    <!-- Librerías Externas: Tailwind CSS, Google Fonts y Chart.js -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -31,18 +30,18 @@
     <style>
         :root {
             /* Perfil Max (Naranja) */
-            --theme-400: 251 146 60;  /* orange-400 */
-            --theme-500: 249 115 22;  /* orange-500 */
-            --theme-600: 234 88 12;   /* orange-600 */
-            --theme-900: 124 45 18;   /* orange-900 */
+            --theme-400: 251 146 60;  
+            --theme-500: 249 115 22;  
+            --theme-600: 234 88 12;   
+            --theme-900: 124 45 18;   
         }
 
         body[data-user="Pipe"] {
             /* Perfil Pipe (Rojo Claro) */
-            --theme-400: 248 113 113; /* red-400 */
-            --theme-500: 239 68 68;   /* red-500 */
-            --theme-600: 220 38 38;   /* red-600 */
-            --theme-900: 127 29 29;   /* red-900 */
+            --theme-400: 248 113 113; 
+            --theme-500: 239 68 68;   
+            --theme-600: 220 38 38;   
+            --theme-900: 127 29 29;   
         }
 
         body {
@@ -93,8 +92,8 @@
             width: 90%; max-width: 350px;
         }
         .toast {
-            background: #10b981; color: white; padding: 14px 18px; border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3); font-weight: 600; font-size: 0.9rem;
+            background: #10b981; color: white; padding: 12px 16px; border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); font-weight: 600; font-size: 0.85rem;
             animation: slideDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center;
         }
         .toast.error { background: #ef4444; }
@@ -104,6 +103,16 @@
             to { transform: translateY(0); opacity: 1; }
         }
         @keyframes fadeOut { to { opacity: 0; transform: translateY(-20px); } }
+        
+        /* Spinner Loader */
+        .loader {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+            border-top: 3px solid rgb(var(--theme-500));
+            width: 20px; height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body data-user="Max" class="h-screen flex flex-col md:flex-row overflow-hidden">
@@ -117,7 +126,6 @@
                 <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-semibold hidden md:block">Fase de Definición</p>
             </div>
             
-            <!-- Selector de Perfil Max vs Pipe -->
             <div class="flex bg-slate-800 rounded-lg p-1 border border-slate-700 w-full md:w-auto">
                 <button onclick="switchUser('Max')" id="btn-user-Max" class="flex-1 user-tab active-user text-xs font-bold px-4 py-2 rounded-md text-slate-300">Max</button>
                 <button onclick="switchUser('Pipe')" id="btn-user-Pipe" class="flex-1 user-tab text-xs font-bold px-4 py-2 rounded-md text-slate-300">Pipe</button>
@@ -129,9 +137,14 @@
         </div>
     </nav>
 
-    <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-[#0b1121]">
+    <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-[#0b1121] relative">
         
-        <!-- VISTA: Entrenamiento Diario -->
+        <!-- Estado de carga inicial -->
+        <div id="app-loader" class="absolute inset-0 bg-[#0b1121] z-50 flex flex-col items-center justify-center">
+            <div class="loader mb-4 w-10 h-10 border-4"></div>
+            <p class="text-slate-400 text-sm font-semibold">Sincronizando con la nube...</p>
+        </div>
+
         <div id="exercises-view" class="max-w-6xl mx-auto hidden">
             <header class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                 <div>
@@ -139,7 +152,6 @@
                     <p id="current-day-focus" class="text-sm text-theme-400 font-medium transition-colors">Enfoque: ...</p>
                 </div>
                 
-                <!-- Máquina del Tiempo (Selector de Fecha de Sesión) -->
                 <div class="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700 shadow-inner flex items-center gap-3 w-full md:w-auto">
                     <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">🗓 Fecha de Sesión:</span>
                     <input type="date" id="training-date" onchange="renderExercises(currentDay)" class="bg-slate-900 border border-theme-500/50 rounded-lg px-3 py-1.5 text-white text-sm focus:border-theme-500 outline-none flex-1 md:w-auto cursor-pointer transition-colors">
@@ -157,19 +169,23 @@
                 <p class="text-sm text-theme-400 font-medium">Comparativas de sobrecarga progresiva Max vs Pipe</p>
             </header>
 
-            <!-- Registro de Peso Corporal -->
+            <!-- Peso Corporal -->
             <div class="glass-card p-5 md:p-6 rounded-2xl border-l-4 border-l-theme-500 transition-colors">
                 <div class="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
                     <div class="w-full md:w-auto">
                         <h3 class="text-xl font-bold text-white mb-2">Evolución de Peso Corporal</h3>
                         <div id="bw-summary" class="flex flex-col gap-1 text-sm bg-slate-900/50 p-3 rounded-lg border border-slate-800">
-                            <!-- Resumen inyectado dinámicamente -->
+                            <!-- Resumen dinámico -->
                         </div>
                     </div>
                     
                     <div class="flex items-center gap-2 w-full md:w-auto bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
                         <input type="date" id="bw-date" class="bg-slate-800 border border-slate-700 rounded-lg px-2 py-2 text-white text-sm focus:border-theme-500 outline-none flex-1 md:w-auto">
-                        <input type="number" id="bw-weight" step="0.1" placeholder="Ej. 65.5" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:border-theme-500 outline-none w-24">
+                        <input type="number" step="0.1" id="bw-weight" placeholder="Ej. 65.5" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:border-theme-500 outline-none w-20">
+                        <select id="bw-unit" class="bg-slate-800 border border-slate-700 rounded-lg px-1 py-2 text-white text-sm focus:border-theme-500 outline-none">
+                            <option value="kg">kg</option>
+                            <option value="lbs">lbs</option>
+                        </select>
                         <button onclick="saveBodyWeight()" class="bg-theme-600 hover:bg-theme-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">Guardar</button>
                     </div>
                 </div>
@@ -179,11 +195,11 @@
                 </div>
             </div>
 
-            <!-- Gráficas de Fuerza e Historial Día a Día -->
+            <!-- Gráficas y Rutina -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="glass-card p-5 md:p-6 rounded-2xl border-l-4 border-l-theme-500 transition-colors flex flex-col">
                     <h3 class="text-white font-bold text-lg mb-1">Índice de Fuerza Semanal</h3>
-                    <p class="text-xs text-slate-400 mb-6">Suma total de kg levantados en la semana (Progreso real).</p>
+                    <p class="text-xs text-slate-400 mb-6">Suma de kg máximos levantados en la semana (Conversión unificada).</p>
                     <div class="relative h-56 w-full mt-auto">
                         <canvas id="weeklyChart"></canvas>
                     </div>
@@ -191,7 +207,7 @@
                 
                 <div class="glass-card p-5 md:p-6 rounded-2xl border-l-4 border-l-theme-500 transition-colors flex flex-col max-h-[400px]">
                     <h3 class="text-white font-bold text-lg mb-1">Historial por Rutina (Día a Día)</h3>
-                    <p class="text-xs text-slate-400 mb-4">Compara el rendimiento exacto entre Max y Pipe sesión tras sesión.</p>
+                    <p class="text-xs text-slate-400 mb-4">Compara el rendimiento entre Max y Pipe sesión tras sesión.</p>
                     
                     <select id="day-progress-select" onchange="renderDayProgress(this.value)" class="w-full bg-slate-900 border border-theme-500/50 text-white rounded-lg p-3 text-sm focus:outline-none focus:border-theme-500 cursor-pointer mb-4 transition-colors">
                         <option value="">-- Selecciona un día de rutina --</option>
@@ -210,40 +226,30 @@
                 </div>
             </div>
 
-            <!-- Panel de Sincronización -->
+            <!-- Panel de Sincronización en la Nube -->
             <div class="glass-card p-5 md:p-6 rounded-2xl mt-2 bg-gradient-to-r from-slate-900 to-slate-800 border border-theme-900/30">
-                <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
-                    🔄 Sincronizar Datos Max ↔ Pipe
-                </h3>
-                <p class="text-sm text-slate-400 mb-4">Copia tu código para enviarlo por WhatsApp a tu Gymbro o pega el suyo para integrar avances.</p>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/50">
-                        <p class="text-xs text-slate-300 font-semibold mb-2">1. Compartir (Mis datos)</p>
-                        <button onclick="exportData()" class="w-full bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-lg text-sm font-bold transition-colors shadow-lg">
-                            📋 Copiar mi código
-                        </button>
-                    </div>
-                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/50">
-                        <p class="text-xs text-slate-300 font-semibold mb-2">2. Recibir (Pegar código de mi Gymbro)</p>
-                        <div class="flex gap-2">
-                            <input type="text" id="import-code" placeholder="Pega el código aquí..." class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-theme-500">
-                            <button onclick="importData()" class="bg-theme-600 hover:bg-theme-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">
-                                Integrar
-                            </button>
-                        </div>
-                    </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <h3 class="text-lg font-bold text-white">Sincronización en la Nube Activa</h3>
                 </div>
+                <p class="text-sm text-slate-400 mt-2">
+                    Tu aplicación está conectada a la base de datos segura. Cualquier peso o cambio que realices se guardará automáticamente y Pipe lo verá reflejado en tiempo real (y viceversa).
+                </p>
             </div>
         </div>
     </main>
 
     <div id="toast-container"></div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
         // EL DÍA CERO: Lunes 7 de Septiembre de 2026
         const START_DATE = new Date('2026-09-07T00:00:00'); 
         
+        // Base de Datos Local de la Rutina
         const routineData = {
             lunes: {
                 title: "Lunes: Torso + Abdomen", focus: "Pecho, Espalda Alta/Media y Core",
@@ -301,33 +307,95 @@
             }
         };
 
-        let currentUser = 'Max'; 
-        let currentDay = 'lunes';
+        // Estado Global
+        window.currentUser = 'Max'; 
+        window.currentDay = 'lunes';
         let timerInterval;
         let chartInstances = {};
-        
-        // Paleta de Colores: Max Naranja (#f97316), Pipe Rojo (#ef4444)
         const userColors = { 'Max': '#f97316', 'Pipe': '#ef4444' };
+        
+        // Datos Firebase
+        let globalExerciseHistory = [];
+        let globalBodyWeights = [];
+        let app, db, auth;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'trackfit-pro-v1';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
 
+        // Inicialización de Firebase
+        async function initFirebase() {
+            try {
+                if (Object.keys(firebaseConfig).length === 0) throw new Error("No config");
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                if (token) {
+                    await signInWithCustomToken(auth, token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                setupRealtimeListeners();
+            } catch (error) {
+                console.warn("Ejecutando en modo local (sin DB).");
+                document.getElementById('app-loader').classList.add('hidden');
+                autoSelectDay();
+            }
+        }
+
+        function setupRealtimeListeners() {
+            if (!auth.currentUser) return;
+            
+            const exRef = collection(db, 'artifacts', appId, 'public', 'data', 'exerciseHistory');
+            onSnapshot(exRef, (snapshot) => {
+                globalExerciseHistory = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+                if (window.currentDay === 'progreso') renderProgress(); else renderExercises(window.currentDay);
+            }, (err) => console.error("Error sync ejercicios:", err));
+
+            const bwRef = collection(db, 'artifacts', appId, 'public', 'data', 'bodyWeights');
+            onSnapshot(bwRef, (snapshot) => {
+                globalBodyWeights = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+                if (window.currentDay === 'progreso') renderProgress();
+                
+                // Ocultar loader una vez cargado
+                document.getElementById('app-loader').classList.add('hidden');
+            }, (err) => console.error("Error sync peso:", err));
+        }
+
+        // Helper: Fecha local en formato YYYY-MM-DD
         function getLocalISODate() {
             const tzOffset = (new Date()).getTimezoneOffset() * 60000;
             return (new Date(Date.now() - tzOffset)).toISOString().slice(0, 10);
         }
 
+        // Auto-detectar día (Solo se ejecuta al inicio)
+        function autoSelectDay() {
+            const today = new Date().getDay(); // 0: Dom, 1: Lun...
+            const daysMap = { 1: 'lunes', 2: 'martes', 3: 'miercoles', 4: 'jueves', 5: 'viernes' };
+            if (daysMap[today]) {
+                window.currentDay = daysMap[today];
+            } else {
+                window.currentDay = 'progreso'; // Fines de semana
+            }
+            renderTabs();
+            if(window.currentDay === 'progreso') renderProgress(); else renderExercises(window.currentDay);
+        }
+
         document.getElementById('training-date').value = getLocalISODate();
         document.getElementById('bw-date').value = getLocalISODate();
 
-        function switchUser(user) {
-            currentUser = user;
+        window.switchUser = function(user) {
+            window.currentUser = user;
             document.body.setAttribute('data-user', user);
             
             document.getElementById('btn-user-Max').classList.toggle('active-user', user === 'Max');
             document.getElementById('btn-user-Pipe').classList.toggle('active-user', user === 'Pipe');
             
-            showToast(`👤 Perfil cambiado a ${user}. Entorno aislado.`);
+            showToast(`👤 Perfil cambiado a ${user}`);
             
-            if (currentDay === 'progreso') renderProgress();
-            else renderExercises(currentDay);
+            if (window.currentDay === 'progreso') renderProgress();
+            else renderExercises(window.currentDay);
         }
 
         function showToast(message, type = 'success') {
@@ -336,13 +404,14 @@
             toast.className = `toast ${type === 'error' ? 'error' : ''}`;
             toast.innerHTML = message;
             container.appendChild(toast);
+            // Tiempo de notificación reducido a 1.5s
             setTimeout(() => {
                 toast.style.animation = 'fadeOut 0.3s ease forwards';
                 setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            }, 1500);
         }
 
-        function playBeep() {
+        window.playBeep = function() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = ctx.createOscillator();
@@ -354,7 +423,7 @@
             } catch(e) {}
         }
 
-        function startTimer(seconds) {
+        window.startTimer = function(seconds) {
             clearInterval(timerInterval);
             let timeLeft = seconds;
             showToast(`⏱ Descanso: ${timeLeft}s`);
@@ -363,7 +432,7 @@
                 timeLeft--;
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    playBeep();
+                    window.playBeep();
                     showToast('🔥 ¡TIEMPO! A darle a la serie.');
                 }
             }, 1000);
@@ -377,56 +446,58 @@
             return weekNum > 0 ? weekNum : 1; 
         }
 
-        function getSavedWeightForDate(dayId, index, dateVal) {
-            let history = JSON.parse(localStorage.getItem(`tf_pro_hist_${currentUser}_${dayId}_${index}`)) || [];
-            const entry = history.find(e => e.dateStr === dateVal);
-            return entry ? entry.weight : '';
+        function getSavedExerciseData(dayId, index, dateVal) {
+            return globalExerciseHistory.find(e => e.user === window.currentUser && e.dayId === dayId && e.exerciseIndex === index && e.dateStr === dateVal);
         }
 
-        function getLastKnownWeight(dayId, index, dateVal) {
-            let history = JSON.parse(localStorage.getItem(`tf_pro_hist_${currentUser}_${dayId}_${index}`)) || [];
-            const past = history.filter(e => e.dateStr < dateVal).sort((a,b) => a.timestamp - b.timestamp);
-            return past.length > 0 ? past[past.length-1].weight : '';
+        function getLastKnownExerciseData(dayId, index, dateVal) {
+            const past = globalExerciseHistory
+                .filter(e => e.user === window.currentUser && e.dayId === dayId && e.exerciseIndex === index && e.dateStr < dateVal)
+                .sort((a,b) => a.timestamp - b.timestamp);
+            return past.length > 0 ? past[past.length-1] : null;
         }
 
-        function saveWeight(dayId, index, showMsg = true) {
+        window.saveWeight = async function(dayId, index, showMsg = true) {
+            if (!auth || !auth.currentUser) { showToast("Sin conexión a BD", "error"); return; }
+            
             const dateVal = document.getElementById('training-date').value;
             const input = document.getElementById(`weight-${dayId}-${index}`);
-            const val = input.value.trim();
+            const unitSelect = document.getElementById(`unit-${dayId}-${index}`);
+            const val = parseFloat(input.value.trim());
+            const unit = unitSelect.value;
             
             if(!dateVal) { if(showMsg) showToast("Error: Fecha inválida", "error"); return; }
             
-            let history = JSON.parse(localStorage.getItem(`tf_pro_hist_${currentUser}_${dayId}_${index}`)) || [];
             const timestamp = new Date(dateVal + 'T12:00:00').getTime();
             const weekNum = getWeekNumber(dateVal);
             
-            if (val === '') {
-                history = history.filter(e => e.dateStr !== dateVal);
-            } else {
-                const existingIndex = history.findIndex(entry => entry.dateStr === dateVal);
-                if (existingIndex >= 0) {
-                    history[existingIndex].weight = val;
+            const existing = globalExerciseHistory.find(e => e.user === window.currentUser && e.dayId === dayId && e.exerciseIndex === index && e.dateStr === dateVal);
+
+            try {
+                if (isNaN(val)) {
+                    if (existing) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'exerciseHistory', existing.id));
                 } else {
-                    history.push({ dateStr: dateVal, weight: val, timestamp: timestamp, week: weekNum });
+                    const dataObj = { user: window.currentUser, dayId, exerciseIndex: index, dateStr: dateVal, weight: val, unit: unit, timestamp, week: weekNum };
+                    if (existing) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'exerciseHistory', existing.id), dataObj);
+                    } else {
+                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'exerciseHistory'), dataObj);
+                    }
                 }
-            }
-            
-            history.sort((a,b) => a.timestamp - b.timestamp);
-            localStorage.setItem(`tf_pro_hist_${currentUser}_${dayId}_${index}`, JSON.stringify(history));
-            
-            if(showMsg && val !== '') showToast('💾 Guardado correctamente');
+                if(showMsg && !isNaN(val)) showToast('☁️ Guardado en la nube');
+            } catch(e) { console.error(e); showToast("Error al guardar", "error"); }
         }
 
-        function renderTabs() {
+        window.renderTabs = function() {
             const container = document.getElementById('tabs-container');
             container.innerHTML = '';
             
             Object.keys(routineData).forEach(dayId => {
                 const dayName = dayId.charAt(0).toUpperCase() + dayId.slice(1);
                 const btn = document.createElement('button');
-                btn.className = `tab-btn flex-shrink-0 w-full md:w-auto text-left px-4 py-3 rounded-xl border border-slate-700/50 text-slate-300 mb-2 flex items-center justify-between ${dayId === currentDay ? 'active' : 'hover:bg-slate-800'}`;
+                btn.className = `tab-btn flex-shrink-0 w-full md:w-auto text-left px-4 py-3 rounded-xl border border-slate-700/50 text-slate-300 mb-2 flex items-center justify-between ${dayId === window.currentDay ? 'active' : 'hover:bg-slate-800'}`;
                 btn.innerHTML = `<span class="font-semibold text-sm">${dayName}</span>`;
-                btn.onclick = () => { currentDay = dayId; renderTabs(); renderExercises(dayId); };
+                btn.onclick = () => { window.currentDay = dayId; renderTabs(); renderExercises(dayId); };
                 container.appendChild(btn);
             });
 
@@ -435,13 +506,13 @@
             container.appendChild(sep);
 
             const btnProg = document.createElement('button');
-            btnProg.className = `tab-btn flex-shrink-0 w-full md:w-auto text-left px-4 py-3 rounded-xl border border-slate-600/50 text-slate-200 shadow-lg bg-slate-800/50 ${currentDay === 'progreso' ? 'active' : 'hover:bg-slate-700/50'}`;
+            btnProg.className = `tab-btn flex-shrink-0 w-full md:w-auto text-left px-4 py-3 rounded-xl border border-slate-600/50 text-slate-200 shadow-lg bg-slate-800/50 ${window.currentDay === 'progreso' ? 'active' : 'hover:bg-slate-700/50'}`;
             btnProg.innerHTML = `<span class="font-bold text-sm flex items-center gap-2">📈 Ver Avances</span>`;
-            btnProg.onclick = () => { currentDay = 'progreso'; renderTabs(); renderProgress(); };
+            btnProg.onclick = () => { window.currentDay = 'progreso'; renderTabs(); renderProgress(); };
             container.appendChild(btnProg);
         }
 
-        function renderExercises(dayId) {
+        window.renderExercises = function(dayId) {
             document.getElementById('exercises-view').classList.remove('hidden');
             document.getElementById('progress-view').classList.add('hidden');
 
@@ -455,9 +526,12 @@
             container.innerHTML = ''; 
             
             dayData.exercises.forEach((ex, index) => {
-                const savedWeightForDate = getSavedWeightForDate(dayId, index, selectedDate);
-                const lastKnown = getLastKnownWeight(dayId, index, selectedDate);
-                const placeholder = lastKnown ? `Antes: ${lastKnown}` : "Ej. 45 kg";
+                const currentData = getSavedExerciseData(dayId, index, selectedDate);
+                const lastData = getLastKnownExerciseData(dayId, index, selectedDate);
+                
+                const val = currentData ? currentData.weight : '';
+                const unit = currentData ? currentData.unit : (lastData ? lastData.unit : 'kg');
+                const placeholder = lastData ? `Antes: ${lastData.weight} ${lastData.unit}` : "Ej. 45";
                 
                 const card = document.createElement('div');
                 card.className = 'glass-card rounded-2xl flex flex-col p-5 relative border-t-2 border-t-theme-500/50';
@@ -474,19 +548,24 @@
                     </div>
                     
                     <div class="grid grid-cols-2 gap-3 mb-5">
-                        <div class="bg-slate-900/80 rounded-lg p-2.5 text-center border border-slate-700/50">
+                        <div class="bg-slate-900/80 rounded-lg p-2 text-center border border-slate-700/50">
                             <span class="block text-[9px] text-slate-400 uppercase tracking-widest mb-1">Series</span>
                             <strong class="text-sm text-white">${ex.sets}</strong>
                         </div>
-                        <div class="bg-slate-900/80 rounded-lg p-2.5 text-center border border-slate-700/50">
+                        <div class="bg-slate-900/80 rounded-lg p-2 text-center border border-slate-700/50">
                             <span class="block text-[9px] text-slate-400 uppercase tracking-widest mb-1">Reps</span>
-                            <strong class="text-sm text-theme-400">${ex.reps}</strong>
+                            <strong class="text-xs text-theme-400">${ex.reps}</strong>
                         </div>
                     </div>
 
                     <div class="mt-auto border-t border-slate-700/50 pt-4 flex flex-col gap-3">
+                        <label class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Registro de Carga:</label>
                         <div class="flex gap-2 w-full">
-                            <input type="text" id="weight-${dayId}-${index}" value="${savedWeightForDate}" placeholder="${placeholder}" onchange="saveWeight('${dayId}', ${index}, false)" class="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-theme-500 transition-colors min-w-0">
+                            <input type="number" step="0.1" id="weight-${dayId}-${index}" value="${val}" placeholder="${placeholder}" class="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-theme-500 transition-colors min-w-0">
+                            <select id="unit-${dayId}-${index}" class="bg-slate-900 border border-slate-600 rounded-lg px-2 py-2 text-white text-xs focus:outline-none focus:border-theme-500">
+                                <option value="kg" ${unit === 'kg' ? 'selected' : ''}>kg</option>
+                                <option value="lbs" ${unit === 'lbs' ? 'selected' : ''}>lbs</option>
+                            </select>
                             <button onclick="saveWeight('${dayId}', ${index})" class="bg-theme-600 hover:bg-theme-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-lg shadow-theme-500/20 flex-shrink-0">
                                 Guardar
                             </button>
@@ -500,36 +579,39 @@
             });
         }
 
-        function saveBodyWeight() {
+        window.saveBodyWeight = async function() {
+            if (!auth || !auth.currentUser) return;
             const dateVal = document.getElementById('bw-date').value;
             const weightVal = parseFloat(document.getElementById('bw-weight').value);
+            const unitVal = document.getElementById('bw-unit').value;
             
             if(!dateVal || isNaN(weightVal)) {
                 showToast("Ingresa fecha y peso válidos", "error"); return;
             }
 
-            let bwHistory = JSON.parse(localStorage.getItem(`tf_pro_bw_${currentUser}`)) || [];
             const timestamp = new Date(dateVal + 'T12:00:00').getTime();
-            
-            const existingIndex = bwHistory.findIndex(entry => entry.dateStr === dateVal);
-            if(existingIndex >= 0) bwHistory[existingIndex].weight = weightVal;
-            else bwHistory.push({ dateStr: dateVal, weight: weightVal, timestamp: timestamp });
-            
-            bwHistory.sort((a,b) => a.timestamp - b.timestamp);
-            localStorage.setItem(`tf_pro_bw_${currentUser}`, JSON.stringify(bwHistory));
-            
-            showToast("✅ Peso corporal registrado");
-            document.getElementById('bw-weight').value = "";
-            updateCharts(); 
+            const existing = globalBodyWeights.find(e => e.user === window.currentUser && e.dateStr === dateVal);
+
+            try {
+                const dataObj = { user: window.currentUser, dateStr: dateVal, weight: weightVal, unit: unitVal, timestamp: timestamp };
+                if (existing) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bodyWeights', existing.id), dataObj);
+                } else {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'bodyWeights'), dataObj);
+                }
+                showToast("☁️ Peso corporal guardado");
+                document.getElementById('bw-weight').value = "";
+            } catch(e) { console.error(e); }
         }
 
-        function extractNumber(str) {
-            if(!str) return 0;
-            const match = str.match(/[\d.]+/);
-            return match ? parseFloat(match[0]) : 0;
+        // Conversor universal a KG para gráficas unificadas
+        function toKg(weight, unit) {
+            if (typeof weight !== 'number') weight = parseFloat(weight);
+            if (isNaN(weight)) return 0;
+            return unit === 'lbs' ? weight * 0.453592 : weight;
         }
 
-        function renderProgress() {
+        window.renderProgress = function() {
             document.getElementById('exercises-view').classList.add('hidden');
             document.getElementById('progress-view').classList.remove('hidden');
             updateCharts();
@@ -539,33 +621,38 @@
             Chart.defaults.color = '#94a3b8';
             Chart.defaults.font.family = 'Inter';
             
-            const bwMax = JSON.parse(localStorage.getItem(`tf_pro_bw_Max`)) || [];
-            const bwPipe = JSON.parse(localStorage.getItem(`tf_pro_bw_Pipe`)) || [];
+            // 1. DATA DE PESO CORPORAL
+            const bwMax = globalBodyWeights.filter(e => e.user === 'Max').sort((a,b) => a.timestamp - b.timestamp);
+            const bwPipe = globalBodyWeights.filter(e => e.user === 'Pipe').sort((a,b) => a.timestamp - b.timestamp);
             const allBwDates = [...new Set([...bwMax.map(e=>e.dateStr), ...bwPipe.map(e=>e.dateStr)])].sort();
             
-            const bwMaxData = allBwDates.map(d => { const e = bwMax.find(x=>x.dateStr===d); return e ? e.weight : null; });
-            const bwPipeData = allBwDates.map(d => { const e = bwPipe.find(x=>x.dateStr===d); return e ? e.weight : null; });
+            // Convertir a Kg para la gráfica comparativa justa
+            const bwMaxData = allBwDates.map(d => { const e = bwMax.find(x=>x.dateStr===d); return e ? toKg(e.weight, e.unit) : null; });
+            const bwPipeData = allBwDates.map(d => { const e = bwPipe.find(x=>x.dateStr===d); return e ? toKg(e.weight, e.unit) : null; });
 
             renderChartInstance('weightChart', allBwDates, [
                 {label: 'Max (kg)', data: bwMaxData, color: userColors['Max']},
                 {label: 'Pipe (kg)', data: bwPipeData, color: userColors['Pipe']}
             ], true);
 
+            // Resumen Textual BW
             let summaryHtml = '';
             if(bwMax.length > 0) {
-                const first = bwMax[0].weight; const last = bwMax[bwMax.length-1].weight; const diff = (last-first).toFixed(1);
-                summaryHtml += `<div class="flex justify-between items-center text-slate-300"><span class="font-semibold text-orange-400">Max:</span> <span>Inicial: ${first}kg ➔ Actual: ${last}kg <strong class="${diff>=0?'text-emerald-400':'text-red-400'}">(${diff>=0?'+':''}${diff}kg)</strong></span></div>`;
+                const first = bwMax[0]; const last = bwMax[bwMax.length-1]; 
+                const diff = (toKg(last.weight, last.unit) - toKg(first.weight, first.unit)).toFixed(1);
+                summaryHtml += `<div class="flex justify-between items-center text-slate-300"><span class="font-semibold text-orange-400">Max:</span> <span>Inicial: ${first.weight}${first.unit} ➔ Actual: ${last.weight}${last.unit} <strong class="${diff>=0?'text-emerald-400':'text-red-400'}">(${diff>=0?'+':''}${diff}kg)</strong></span></div>`;
             }
             if(bwPipe.length > 0) {
-                const first = bwPipe[0].weight; const last = bwPipe[bwPipe.length-1].weight; const diff = (last-first).toFixed(1);
-                summaryHtml += `<div class="flex justify-between items-center text-slate-300 border-t border-slate-700/50 pt-1 mt-1"><span class="font-semibold text-red-400">Pipe:</span> <span>Inicial: ${first}kg ➔ Actual: ${last}kg <strong class="${diff>=0?'text-emerald-400':'text-red-400'}">(${diff>=0?'+':''}${diff}kg)</strong></span></div>`;
+                const first = bwPipe[0]; const last = bwPipe[bwPipe.length-1]; 
+                const diff = (toKg(last.weight, last.unit) - toKg(first.weight, first.unit)).toFixed(1);
+                summaryHtml += `<div class="flex justify-between items-center text-slate-300 border-t border-slate-700/50 pt-1 mt-1"><span class="font-semibold text-red-400">Pipe:</span> <span>Inicial: ${first.weight}${first.unit} ➔ Actual: ${last.weight}${last.unit} <strong class="${diff>=0?'text-emerald-400':'text-red-400'}">(${diff>=0?'+':''}${diff}kg)</strong></span></div>`;
             }
             if(!summaryHtml) summaryHtml = '<p class="text-slate-500 italic">No hay registros de peso aún.</p>';
             document.getElementById('bw-summary').innerHTML = summaryHtml;
 
+            // 2. DATA DE FUERZA SEMANAL
             const wDataMax = getWeeklyStrengthData('Max');
             const wDataPipe = getWeeklyStrengthData('Pipe');
-            
             const currentRealWeek = getWeekNumber(getLocalISODate());
             const weekLabels = Array.from({length: currentRealWeek}, (_, i) => `Sem ${i+1}`);
 
@@ -576,25 +663,20 @@
             };
 
             renderChartInstance('weeklyChart', weekLabels, [
-                {label: 'Max (Fuerza)', data: alignData(wDataMax), color: userColors['Max']},
-                {label: 'Pipe (Fuerza)', data: alignData(wDataPipe), color: userColors['Pipe']}
+                {label: 'Max (Fuerza kg)', data: alignData(wDataMax), color: userColors['Max']},
+                {label: 'Pipe (Fuerza kg)', data: alignData(wDataPipe), color: userColors['Pipe']}
             ], false);
 
             document.getElementById('day-progress-select').value = "";
-            document.getElementById('day-progress-list').innerHTML = `<div class="text-center text-slate-500 py-6 border border-dashed border-slate-700 rounded-xl text-sm mt-4">Selecciona una rutina arriba.</div>`;
+            document.getElementById('day-progress-list').innerHTML = `<div class="text-center text-slate-500 py-6 border border-dashed border-slate-700 rounded-xl text-sm mt-4">Selecciona una rutina arriba para ver comparativas.</div>`;
         }
 
         function getWeeklyStrengthData(user) {
             let weeklyMap = {};
-            Object.keys(routineData).forEach(dayId => {
-                routineData[dayId].exercises.forEach((ex, index) => {
-                    let hist = JSON.parse(localStorage.getItem(`tf_pro_hist_${user}_${dayId}_${index}`)) || [];
-                    hist.forEach(entry => {
-                        const w = extractNumber(entry.weight);
-                        if (!weeklyMap[entry.week]) weeklyMap[entry.week] = [];
-                        weeklyMap[entry.week].push(w);
-                    });
-                });
+            globalExerciseHistory.filter(e => e.user === user).forEach(entry => {
+                const w = toKg(entry.weight, entry.unit); // Convertir todo a kg para sumar la fuerza total de forma justa
+                if (!weeklyMap[entry.week]) weeklyMap[entry.week] = [];
+                weeklyMap[entry.week].push(w);
             });
             
             let result = [];
@@ -614,7 +696,7 @@
             if(chartInstances[canvasId]) chartInstances[canvasId].destroy();
 
             const datasets = datasetsConfig.map(ds => ({
-                label: ds.label, data: ds.data,
+                label: ds.label, data: ds.data.map(val => val ? parseFloat(val.toFixed(1)) : null),
                 borderColor: ds.color, backgroundColor: ds.color + '20',
                 borderWidth: 3, pointBackgroundColor: '#0b1121', pointBorderColor: ds.color,
                 pointRadius: 4, pointHoverRadius: 6, spanGaps: spanGaps, tension: 0.3
@@ -638,39 +720,27 @@
                                     for(let i = context.dataIndex - 1; i >= 0; i--){
                                         if(context.dataset.data[i] !== null) { prevVal = context.dataset.data[i]; break; }
                                     }
-                                    let diffStr = '';
-                                    if(prevVal !== null) {
-                                        let diff = (val - prevVal).toFixed(1);
-                                        diffStr = diff > 0 ? ` (+${diff})` : (diff < 0 ? ` (${diff})` : ' (=)');
-                                    }
-                                    return `${label}: ${val}${diffStr}`;
+                                    let diffStr = prevVal !== null ? `(${val > prevVal ? '+' : ''}${(val - prevVal).toFixed(1)})` : '';
+                                    return `${label}: ${val} ${diffStr}`;
                                 }
                             }
                         }
                     },
-                    scales: {
-                        y: { grid: { color: '#1e293b' }, ticks: { precision: 1 } },
-                        x: { grid: { display: false } }
-                    }
+                    scales: { y: { grid: { color: '#1e293b' } }, x: { grid: { display: false } } }
                 }
             });
         }
 
-        function renderDayProgress(dayId) {
+        window.renderDayProgress = function(dayId) {
             const container = document.getElementById('day-progress-list');
             if(!dayId) return;
 
             const exercises = routineData[dayId].exercises;
-            let allDates = new Set();
             
-            exercises.forEach((ex, index) => {
-                const maxHist = JSON.parse(localStorage.getItem(`tf_pro_hist_Max_${dayId}_${index}`)) || [];
-                const pipeHist = JSON.parse(localStorage.getItem(`tf_pro_hist_Pipe_${dayId}_${index}`)) || [];
-                maxHist.forEach(e => allDates.add(e.dateStr));
-                pipeHist.forEach(e => allDates.add(e.dateStr));
-            });
-
-            const sortedDates = Array.from(allDates).sort().reverse();
+            // Buscar fechas donde Max O Pipe entrenaron ese día
+            const allHistory = globalExerciseHistory.filter(e => e.dayId === dayId);
+            const allDates = [...new Set(allHistory.map(e => e.dateStr))];
+            const sortedDates = allDates.sort().reverse();
 
             if(sortedDates.length === 0) {
                 container.innerHTML = `<div class="bg-slate-800/40 p-6 rounded-xl text-center border border-slate-700 mt-2"><p class="text-slate-400 text-sm">Sin registros para este día.</p></div>`;
@@ -688,36 +758,42 @@
                         <div class="p-3 divide-y divide-slate-700/50">`;
 
                 exercises.forEach((ex, index) => {
-                    const maxHist = JSON.parse(localStorage.getItem(`tf_pro_hist_Max_${dayId}_${index}`)) || [];
-                    const pipeHist = JSON.parse(localStorage.getItem(`tf_pro_hist_Pipe_${dayId}_${index}`)) || [];
-                    const mEntry = maxHist.find(e => e.dateStr === dateStr);
-                    const pEntry = pipeHist.find(e => e.dateStr === dateStr);
+                    const mEntry = allHistory.find(e => e.user === 'Max' && e.exerciseIndex === index && e.dateStr === dateStr);
+                    const pEntry = allHistory.find(e => e.user === 'Pipe' && e.exerciseIndex === index && e.dateStr === dateStr);
                     
                     if(!mEntry && !pEntry) return;
                     
-                    const calcDiff = (hist, currEntry) => {
-                        const past = hist.filter(e => e.dateStr < dateStr).sort((a,b)=>a.timestamp - b.timestamp);
+                    const calcDiff = (user, currEntry) => {
+                        const past = globalExerciseHistory
+                            .filter(e => e.user === user && e.dayId === dayId && e.exerciseIndex === index && e.dateStr < dateStr)
+                            .sort((a,b)=>a.timestamp - b.timestamp);
                         if(past.length === 0) return '';
-                        const diff = extractNumber(currEntry.weight) - extractNumber(past[past.length-1].weight);
-                        if(diff > 0) return `<span class="text-emerald-400 text-[10px] ml-1">▲+${diff}</span>`;
-                        if(diff < 0) return `<span class="text-red-400 text-[10px] ml-1">▼${diff}</span>`;
+                        
+                        // Calculamos la diferencia unificada en Kg para que sea matemáticamente correcta
+                        const diffKg = toKg(currEntry.weight, currEntry.unit) - toKg(past[past.length-1].weight, past[past.length-1].unit);
+                        const diffVal = parseFloat(diffKg.toFixed(1));
+
+                        if(diffVal > 0) return `<span class="text-emerald-400 text-[10px] ml-1 font-bold">▲+${diffVal}kg</span>`;
+                        if(diffVal < 0) return `<span class="text-red-400 text-[10px] ml-1 font-bold">▼${diffVal}kg</span>`;
                         return `<span class="text-slate-500 text-[10px] ml-1">=</span>`;
                     };
 
-                    const mWeight = mEntry ? `<span class="font-bold text-orange-400">${mEntry.weight}</span>${calcDiff(maxHist, mEntry)}` : '<span class="text-slate-600">--</span>';
-                    const pWeight = pEntry ? `<span class="font-bold text-red-400">${pEntry.weight}</span>${calcDiff(pipeHist, pEntry)}` : '<span class="text-slate-600">--</span>';
+                    const formatWeight = (entry) => entry ? `<span class="font-bold text-lg">${entry.weight}</span><span class="text-[9px] ml-0.5">${entry.unit}</span>` : '<span class="text-slate-600">--</span>';
+
+                    const mWeight = formatWeight(mEntry) + (mEntry ? calcDiff('Max', mEntry) : '');
+                    const pWeight = formatWeight(pEntry) + (pEntry ? calcDiff('Pipe', pEntry) : '');
 
                     htmlStr += `
-                        <div class="py-2 flex justify-between items-center text-xs">
-                            <span class="text-slate-300 font-medium truncate w-1/2 pr-2">${ex.name}</span>
-                            <div class="w-1/2 flex justify-end gap-3 text-right">
-                                <div class="w-1/2 bg-slate-900/50 rounded px-1 py-1 border border-orange-900/30">
-                                    <span class="block text-[8px] text-orange-500 uppercase">Max</span>
-                                    ${mWeight}
+                        <div class="py-2 flex flex-col md:flex-row md:justify-between md:items-center text-xs gap-2">
+                            <span class="text-slate-300 font-medium md:w-1/2">${ex.name}</span>
+                            <div class="flex gap-2 w-full md:w-1/2 justify-end">
+                                <div class="flex-1 max-w-[100px] bg-slate-900/80 rounded-lg p-1.5 border border-orange-900/40 flex flex-col items-end justify-center">
+                                    <span class="text-[8px] text-orange-500 font-bold uppercase w-full text-left">Max</span>
+                                    <div class="flex items-baseline">${mWeight}</div>
                                 </div>
-                                <div class="w-1/2 bg-slate-900/50 rounded px-1 py-1 border border-red-900/30">
-                                    <span class="block text-[8px] text-red-500 uppercase">Pipe</span>
-                                    ${pWeight}
+                                <div class="flex-1 max-w-[100px] bg-slate-900/80 rounded-lg p-1.5 border border-red-900/40 flex flex-col items-end justify-center">
+                                    <span class="text-[8px] text-red-500 font-bold uppercase w-full text-left">Pipe</span>
+                                    <div class="flex items-baseline">${pWeight}</div>
                                 </div>
                             </div>
                         </div>`;
@@ -727,60 +803,9 @@
             container.innerHTML = htmlStr;
         }
 
-        function exportData() {
-            try {
-                let dataToExport = {};
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key.startsWith(`tf_pro_`)) dataToExport[key] = localStorage.getItem(key);
-                }
-                const encodedData = btoa(encodeURIComponent(JSON.stringify(dataToExport)));
-                const tempInput = document.createElement("input");
-                tempInput.value = encodedData;
-                document.body.appendChild(tempInput);
-                tempInput.select();
-                document.execCommand("copy");
-                document.body.removeChild(tempInput);
-                showToast("✅ Código de datos copiado. Envíalo a Pipe por WhatsApp.");
-            } catch (err) { showToast("Error al exportar", "error"); }
-        }
+        // Inicializar App
+        initFirebase();
 
-        function importData() {
-            const inputField = document.getElementById('import-code');
-            const code = inputField.value.trim();
-            if(!code) { showToast("Pega el código primero", "error"); return; }
-            
-            try {
-                const decodedStr = decodeURIComponent(atob(code));
-                const dataToImport = JSON.parse(decodedStr);
-                
-                for (const key in dataToImport) {
-                    if(key.startsWith('tf_pro_')) {
-                        if(key.includes('_hist_') || key.includes('_bw_')) {
-                            const localData = JSON.parse(localStorage.getItem(key)) || [];
-                            const importedData = JSON.parse(dataToImport[key]) || [];
-                            
-                            const mergedMap = new Map();
-                            localData.forEach(e => mergedMap.set(e.dateStr, e));
-                            importedData.forEach(e => mergedMap.set(e.dateStr, e));
-                            
-                            const mergedArray = Array.from(mergedMap.values()).sort((a,b)=>a.timestamp - b.timestamp);
-                            localStorage.setItem(key, JSON.stringify(mergedArray));
-                        } else {
-                            localStorage.setItem(key, dataToImport[key]);
-                        }
-                    }
-                }
-                inputField.value = "";
-                showToast(`✅ Sincronización exitosa.`);
-                updateCharts(); 
-            } catch (err) { showToast("Código inválido", "error"); }
-        }
-
-        window.onload = () => {
-            renderTabs();
-            switchUser('Max');
-        };
     </script>
 </body>
 </html>
