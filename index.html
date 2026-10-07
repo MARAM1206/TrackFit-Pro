@@ -28,19 +28,11 @@
 
     <style>
         :root {
-            /* Perfil Max (Naranja Vibrante) */
+            /* Colores por defecto (Fallback) */
             --theme-400: 251 146 60;  
             --theme-500: 249 115 22;  
             --theme-600: 234 88 12;   
             --theme-900: 124 45 18;   
-        }
-
-        body[data-user="Pipe"] {
-            /* Perfil Pipe (Rojo Puro/Carmesí Brillante - Alto Contraste) */
-            --theme-400: 248 113 113; 
-            --theme-500: 239 68 68;   
-            --theme-600: 220 38 38;   
-            --theme-900: 153 27 27;   
         }
 
         body {
@@ -67,18 +59,26 @@
             border-color: transparent;
         }
 
-        .user-tab { opacity: 0.5; transition: all 0.2s ease; }
-        .user-tab.active-user { background-color: rgb(var(--theme-500)); color: white; opacity: 1; }
+        .user-tab { opacity: 0.5; transition: all 0.2s ease; border: 1px solid transparent; }
+        .user-tab.active-user { background-color: rgb(var(--theme-500)); color: white; opacity: 1; border-color: rgba(255,255,255,0.2); shadow: 0 0 10px rgb(var(--theme-500)/0.5); }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* ELIMINAR FLECHAS DE LOS INPUTS NUMBER */
+        /* Eliminar flechas de inputs numéricos */
         input[type="number"]::-webkit-inner-spin-button, 
         input[type="number"]::-webkit-outer-spin-button { 
             -webkit-appearance: none; margin: 0; 
         }
         input[type="number"] { -moz-appearance: textfield; }
+
+        /* Ocultar el ícono del calendario nativo para usar nuestro diseño */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%; height: 100%;
+            opacity: 0; cursor: pointer;
+        }
 
         #toast-container {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
@@ -95,25 +95,30 @@
         @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeOut { to { opacity: 0; transform: translateY(-20px); } }
 
-        /* Animación para el botón de guardado */
+        /* Animación Botón Guardado */
         @keyframes savedPulse {
             0% { transform: scale(1); background-color: #10b981; }
             50% { transform: scale(1.05); background-color: #059669; }
             100% { transform: scale(1); }
         }
         .btn-saved {
-            animation: savedPulse 0.4s ease-out;
+            animation: savedPulse 0.5s ease-out;
             background-color: #10b981 !important;
             color: white !important;
             border-color: #10b981 !important;
         }
+
+        /* Modals */
+        .modal-overlay {
+            background-color: rgba(11, 17, 33, 0.85);
+            backdrop-filter: blur(4px);
+        }
     </style>
 </head>
-<body data-user="Max" class="h-screen flex flex-col md:flex-row overflow-hidden">
+<body class="h-screen flex flex-col md:flex-row overflow-hidden">
 
-    <!-- BARRA LATERAL -->
     <nav class="w-full md:w-64 lg:w-72 glass-card p-4 flex flex-col z-20 shadow-2xl flex-shrink-0 border-r border-slate-800">
-        <div class="mb-5 flex flex-row md:flex-col items-center md:items-start justify-between gap-4">
+        <div class="mb-5 flex flex-col gap-4">
             <div>
                 <h1 class="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2 transition-colors">
                     <span class="text-theme-500">Track</span>Fit Pro
@@ -121,21 +126,34 @@
                 <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-semibold hidden md:block">Fase de Definición</p>
             </div>
             
-            <div class="flex bg-slate-800 rounded-lg p-1 border border-slate-700 w-full md:w-auto">
-                <button onclick="switchUser('Max')" id="btn-user-Max" class="flex-1 user-tab active-user text-xs font-bold px-4 py-2 rounded-md text-slate-300">Max</button>
-                <button onclick="switchUser('Pipe')" id="btn-user-Pipe" class="flex-1 user-tab text-xs font-bold px-4 py-2 rounded-md text-slate-300">Pipe</button>
+            <div id="user-selector-container" class="flex bg-slate-800 rounded-lg p-1 border border-slate-700 w-full overflow-x-auto no-scrollbar">
+                <!-- Se inyectan perfiles aquí -->
             </div>
         </div>
         
-        <div class="flex md:flex-col gap-2 overflow-x-auto no-scrollbar pb-2 md:pb-0" id="tabs-container"></div>
+        <div class="flex flex-col flex-1 overflow-y-auto no-scrollbar">
+            <div class="flex md:flex-col gap-2 overflow-x-auto no-scrollbar pb-2 md:pb-0" id="tabs-container">
+                <!-- Pestañas de días y avances -->
+            </div>
+            
+            <div class="w-full h-px bg-slate-800 my-4 hidden md:block"></div>
+            
+            <div class="flex md:flex-col gap-2 overflow-x-auto no-scrollbar pb-2 md:pb-0">
+                <button onclick="switchView('routine-manager')" class="tab-btn view-tab flex-shrink-0 w-full md:w-auto text-left px-4 py-3 rounded-xl border border-slate-700/50 text-slate-400 hover:bg-slate-800 flex items-center gap-2" id="btn-view-routine">
+                    <span class="text-sm font-semibold">⚙️ Editor de Rutinas</span>
+                </button>
+                <button onclick="switchView('profile-manager')" class="tab-btn view-tab flex-shrink-0 w-full md:w-auto text-left px-4 py-3 rounded-xl border border-slate-700/50 text-slate-400 hover:bg-slate-800 flex items-center gap-2" id="btn-view-profiles">
+                    <span class="text-sm font-semibold">👥 Perfiles</span>
+                </button>
+            </div>
+        </div>
     </nav>
 
-    <!-- ÁREA PRINCIPAL -->
-    <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-[#0b1121]">
+    <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-[#0b1121] relative">
         
-        <!-- HEADER GLOBAL (Saludo y Status Nube) -->
+        <!-- HEADER GLOBAL -->
         <div class="max-w-[1400px] mx-auto mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <h2 id="dynamic-greeting" class="text-lg md:text-xl font-bold text-slate-300">Buenos días, Max 💪</h2>
+            <h2 id="dynamic-greeting" class="text-lg md:text-xl font-bold text-slate-300">Cargando...</h2>
             
             <div id="sync-indicator" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 shadow-sm transition-colors">
                 <div id="sync-dot" class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
@@ -143,33 +161,35 @@
             </div>
         </div>
 
+        <!-- ========================================================= -->
         <!-- VISTA: EJERCICIOS -->
-        <div id="exercises-view" class="max-w-[1400px] mx-auto hidden">
+        <!-- ========================================================= -->
+        <div id="exercises-view" class="max-w-[1400px] mx-auto app-view hidden">
             <header class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                 <div>
                     <h3 id="current-day-title" class="text-2xl md:text-3xl font-bold text-white mb-1 tracking-tight">Cargando...</h3>
                     <p id="current-day-focus" class="text-sm text-theme-400 font-medium transition-colors">Enfoque: ...</p>
                 </div>
                 
-                <!-- Selector de Fecha Estilizado -->
-                <div class="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700 shadow-inner flex items-center gap-3 w-full md:w-auto relative overflow-hidden group cursor-pointer hover:bg-slate-800 transition-colors">
-                    <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">🗓 Fecha:</span>
-                    <span id="display-training-date" class="text-white font-bold text-sm tracking-wide group-hover:text-theme-400 transition-colors">06/Oct./2026</span>
-                    <!-- Input invisible sobrepuesto -->
-                    <input type="date" id="training-date" onchange="updateGlobalDate()" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10">
-                    <span class="text-slate-500 text-xs pointer-events-none">▼</span>
+                <!-- Selector de Fecha Interactivo (Clic en cualquier lado) -->
+                <div class="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700 shadow-inner flex items-center gap-3 w-full md:w-auto relative group hover:bg-slate-800 transition-colors cursor-pointer">
+                    <input type="date" id="training-date" onchange="updateGlobalDate()" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
+                    <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider z-10 pointer-events-none">🗓 Fecha:</span>
+                    <span id="display-training-date" class="text-white font-bold text-sm tracking-wide group-hover:text-theme-400 transition-colors z-10 pointer-events-none">...</span>
+                    <span class="text-slate-500 text-xs z-10 pointer-events-none">▼</span>
                 </div>
             </header>
 
-            <!-- Contenedor adaptativo indestructible -->
-            <div id="exercises-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"></div>
+            <div id="exercises-container" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-5"></div>
         </div>
 
+        <!-- ========================================================= -->
         <!-- VISTA: AVANCES -->
-        <div id="progress-view" class="hidden max-w-[1400px] mx-auto flex flex-col gap-6">
+        <!-- ========================================================= -->
+        <div id="progress-view" class="max-w-[1400px] mx-auto flex flex-col gap-6 app-view hidden">
             <header class="mb-2">
                 <h3 class="text-2xl md:text-3xl font-bold text-white mb-1 tracking-tight">Centro de Avances</h3>
-                <p class="text-sm text-theme-400 font-medium">Comparativas de sobrecarga progresiva Max vs Pipe</p>
+                <p class="text-sm text-theme-400 font-medium">Comparativas de sobrecarga progresiva</p>
             </header>
 
             <!-- PESO CORPORAL -->
@@ -181,11 +201,10 @@
                     </div>
                     
                     <div class="flex flex-col sm:flex-row items-center gap-2 w-full lg:w-auto bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
-                        <!-- Fecha BW estilizada -->
-                        <div class="relative flex items-center justify-between bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 w-full sm:w-auto group hover:border-slate-500 transition-colors">
-                            <span id="display-bw-date" class="text-white text-sm tracking-wide group-hover:text-theme-400 transition-colors">06/Oct./2026</span>
-                            <span class="text-slate-500 text-xs ml-3 pointer-events-none">📅</span>
-                            <input type="date" id="bw-date" onchange="updateBwDate()" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10">
+                        <div class="relative bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 w-full sm:w-auto group hover:border-slate-500 transition-colors flex items-center justify-between cursor-pointer">
+                            <input type="date" id="bw-date" onchange="updateBwDate()" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
+                            <span id="display-bw-date" class="text-white text-sm tracking-wide group-hover:text-theme-400 transition-colors z-10 pointer-events-none">...</span>
+                            <span class="text-slate-500 text-xs ml-3 z-10 pointer-events-none">📅</span>
                         </div>
                         
                         <div class="flex items-center gap-2 w-full sm:w-auto">
@@ -223,124 +242,204 @@
                 </div>
                 
                 <!-- HISTORIAL DÍA A DÍA -->
-                <div class="glass-card p-5 md:p-6 rounded-2xl border-l-4 border-l-theme-500 transition-colors flex flex-col max-h-[500px] lg:col-span-2">
+                <div class="glass-card p-5 md:p-6 rounded-2xl border-l-4 border-l-theme-500 transition-colors flex flex-col lg:col-span-2">
                     <h4 class="text-white font-bold text-lg mb-1">Historial por Rutina (Día a Día)</h4>
-                    <p class="text-xs text-slate-400 mb-4">Compara el rendimiento exacto sesión tras sesión.</p>
+                    <p class="text-xs text-slate-400 mb-4">Compara el rendimiento exacto sesión tras sesión o busca una fecha.</p>
                     
-                    <select id="day-progress-select" onchange="renderDayProgress(this.value)" class="w-full bg-slate-900 border border-theme-500/50 text-white rounded-lg p-3 text-sm focus:outline-none focus:border-theme-500 cursor-pointer mb-4 transition-colors">
-                        <option value="">-- Selecciona un día de rutina --</option>
-                        <option value="lunes">Lunes (Torso + Abdomen)</option>
-                        <option value="martes">Martes (Pierna 1)</option>
-                        <option value="miercoles">Miércoles (Empuje + Lateral)</option>
-                        <option value="jueves">Jueves (Tirón + Espalda)</option>
-                        <option value="viernes">Viernes (Pierna 2)</option>
-                    </select>
+                    <div class="flex flex-col sm:flex-row gap-3 mb-4">
+                        <select id="day-progress-select" onchange="renderDayProgress()" class="flex-1 bg-slate-900 border border-theme-500/50 text-white rounded-lg p-3 text-sm focus:outline-none focus:border-theme-500 cursor-pointer transition-colors">
+                            <option value="">-- Selecciona un día de rutina --</option>
+                        </select>
+                        
+                        <!-- Buscador por Fecha en Historial -->
+                        <div class="relative bg-slate-900 border border-slate-700 rounded-lg p-3 sm:w-48 group hover:border-theme-500 transition-colors flex items-center justify-between cursor-pointer">
+                            <input type="date" id="history-date-filter" onchange="renderDayProgress()" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
+                            <span id="display-history-date" class="text-slate-300 text-sm z-10 pointer-events-none">Filtrar fecha...</span>
+                            <span class="text-slate-500 text-xs z-10 pointer-events-none">🔍</span>
+                        </div>
+                        <button onclick="clearHistoryFilter()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 rounded-lg text-sm transition-colors border border-slate-700" title="Limpiar filtro">✖</button>
+                    </div>
                     
-                    <div id="day-progress-list" class="flex flex-col gap-4 overflow-y-auto pr-2 no-scrollbar flex-1"></div>
+                    <div id="day-progress-list" class="flex flex-col gap-4"></div>
                 </div>
             </div>
             
             <!-- SINCRONIZACIÓN -->
             <div class="glass-card p-5 md:p-6 rounded-2xl mt-2 bg-gradient-to-r from-slate-900 to-slate-800 border border-theme-900/30">
-                <h4 class="text-lg font-bold text-white mb-2">Sincronización (Migración)</h4>
-                <p class="text-xs text-slate-400 mb-4">Pega aquí tu código antiguo. Al integrarlo, se subirá automáticamente a la Nube (Firebase) para ambos.</p>
+                <h4 class="text-lg font-bold text-white mb-2">Sincronización de Respaldo</h4>
+                <p class="text-xs text-slate-400 mb-4">Usa esto si la nube falla o para migrar tus datos locales viejos a la base de datos de TrackFit Pro.</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/50">
-                        <button onclick="exportData()" class="w-full bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-lg text-sm font-bold transition-colors shadow-lg">📋 Copiar mis datos locales</button>
+                        <button onclick="exportData()" class="w-full bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-lg text-sm font-bold transition-colors shadow-lg">📋 Copiar código de respaldo</button>
                     </div>
                     <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/50">
                         <div class="flex gap-2">
-                            <input type="text" id="import-code" placeholder="Pega el código aquí..." class="flex-1 w-0 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-theme-500">
-                            <button onclick="importData()" class="bg-theme-600 hover:bg-theme-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">Integrar y Subir</button>
+                            <input type="text" id="import-code" placeholder="Pega código aquí..." class="flex-1 w-0 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-theme-500">
+                            <button onclick="importData()" class="bg-theme-600 hover:bg-theme-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">Integrar</button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- ========================================================= -->
+        <!-- VISTA: EDITOR DE RUTINAS -->
+        <!-- ========================================================= -->
+        <div id="routine-manager-view" class="max-w-[1000px] mx-auto app-view hidden">
+            <header class="mb-6">
+                <h3 class="text-2xl md:text-3xl font-bold text-white mb-1 tracking-tight">⚙️ Editor de Rutinas</h3>
+                <p class="text-sm text-theme-400 font-medium">Modifica los días, enfoques y ejercicios a tu gusto.</p>
+            </header>
+
+            <div class="glass-card p-5 md:p-6 rounded-2xl border-l-4 border-l-slate-500">
+                <div class="mb-6">
+                    <label class="block text-xs text-slate-400 uppercase tracking-widest mb-2 font-bold">Selecciona Día a Editar:</label>
+                    <select id="edit-day-select" onchange="loadDayForEdit()" class="w-full bg-slate-900 border border-slate-700 text-white rounded-lg p-3 text-sm focus:outline-none focus:border-theme-500 cursor-pointer">
+                        <option value="lunes">Lunes</option>
+                        <option value="martes">Martes</option>
+                        <option value="miercoles">Miércoles</option>
+                        <option value="jueves">Jueves</option>
+                        <option value="viernes">Viernes</option>
+                    </select>
+                </div>
+
+                <div id="day-edit-form" class="hidden flex flex-col gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Título del Día (Ej. Martes: Pierna 1)</label>
+                            <input type="text" id="edit-day-title" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-theme-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Enfoque (Ej. Cuádriceps y Glúteos)</label>
+                            <input type="text" id="edit-day-focus" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-theme-500">
+                        </div>
+                    </div>
+                    
+                    <button onclick="saveDayDetails()" class="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg text-sm font-bold transition-colors w-full md:w-auto md:self-end px-6">Guardar Encabezado</button>
+
+                    <div class="w-full h-px bg-slate-700 my-4"></div>
+
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="text-lg font-bold text-white">Ejercicios</h4>
+                        <button onclick="openExerciseLibrary()" class="bg-theme-600 hover:bg-theme-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors shadow-lg">➕ Añadir Ejercicio</button>
+                    </div>
+
+                    <div id="edit-exercises-list" class="flex flex-col gap-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- VISTA: GESTOR DE PERFILES -->
+        <!-- ========================================================= -->
+        <div id="profile-manager-view" class="max-w-[800px] mx-auto app-view hidden">
+            <header class="mb-6">
+                <h3 class="text-2xl md:text-3xl font-bold text-white mb-1 tracking-tight">👥 Gestión de Perfiles</h3>
+                <p class="text-sm text-theme-400 font-medium">Agrega nuevos Gymbros o personaliza colores.</p>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="glass-card p-5 md:p-6 rounded-2xl border-l-4 border-l-slate-500">
+                    <h4 class="text-lg font-bold text-white mb-4">Perfiles Actuales</h4>
+                    <div id="profiles-list" class="flex flex-col gap-3"></div>
+                </div>
+
+                <div class="glass-card p-5 md:p-6 rounded-2xl border-l-4 border-l-theme-500">
+                    <h4 class="text-lg font-bold text-white mb-4" id="profile-form-title">Crear Nuevo Perfil</h4>
+                    <input type="hidden" id="edit-profile-id" value="">
+                    
+                    <div class="flex flex-col gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Nombre</label>
+                            <input type="text" id="profile-name" placeholder="Ej. Carlos" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-theme-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Color del Tema (Hexadecimal)</label>
+                            <div class="flex gap-2 items-center">
+                                <input type="color" id="profile-color-picker" class="w-10 h-10 bg-transparent border-0 cursor-pointer rounded">
+                                <input type="text" id="profile-color-hex" placeholder="#ff5500" class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-theme-500">
+                            </div>
+                        </div>
+                        <div class="flex gap-2 mt-2">
+                            <button onclick="saveProfile()" class="flex-1 bg-theme-600 hover:bg-theme-500 text-white py-2 rounded-lg text-sm font-bold transition-colors">Guardar Perfil</button>
+                            <button onclick="resetProfileForm()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
+
+    <!-- Modal: Biblioteca de Ejercicios -->
+    <div id="library-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center modal-overlay p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/50">
+                <h3 class="text-lg font-bold text-white">📚 Biblioteca de Ejercicios</h3>
+                <button onclick="closeModal('library-modal')" class="text-slate-400 hover:text-white text-xl">&times;</button>
+            </div>
+            
+            <div class="p-4 border-b border-slate-800 flex gap-2 overflow-x-auto no-scrollbar">
+                <select id="library-filter" onchange="renderLibrary()" class="bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-theme-500">
+                    <option value="Todos">Todos los Músculos</option>
+                    <option value="Pecho">Pecho</option>
+                    <option value="Espalda">Espalda</option>
+                    <option value="Pierna">Pierna</option>
+                    <option value="Hombro">Hombro</option>
+                    <option value="Brazos">Brazos</option>
+                    <option value="Core">Core</option>
+                </select>
+                <button onclick="openExerciseEditor(null, true)" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap">✏️ Crear Personalizado</button>
+            </div>
+
+            <div id="library-list" class="flex-1 overflow-y-auto p-4 flex flex-col gap-2"></div>
+        </div>
+    </div>
+
+    <!-- Modal: Editor de Ejercicio (Añadir/Editar) -->
+    <div id="exercise-editor-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center modal-overlay p-4">
+        <div class="bg-slate-900 border border-theme-500/50 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/50">
+                <h3 class="text-lg font-bold text-white" id="editor-modal-title">Editar Ejercicio</h3>
+                <button onclick="closeModal('exercise-editor-modal')" class="text-slate-400 hover:text-white text-xl">&times;</button>
+            </div>
+            
+            <div class="p-5 flex flex-col gap-4">
+                <input type="hidden" id="editor-ex-index">
+                <input type="hidden" id="editor-is-new">
+
+                <div><label class="block text-xs text-slate-400 mb-1">Nombre del Ejercicio</label>
+                <input type="text" id="editor-name" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-theme-500"></div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-xs text-slate-400 mb-1">Músculo Principal</label>
+                    <input type="text" id="editor-muscle" placeholder="Ej. Pecho" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-theme-500"></div>
+                    <div><label class="block text-xs text-slate-400 mb-1">Equipo</label>
+                    <input type="text" id="editor-equipment" placeholder="Ej. Polea" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-theme-500"></div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <div><label class="block text-xs text-slate-400 mb-1">Series</label>
+                    <input type="text" id="editor-sets" placeholder="Ej. 4" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-theme-500"></div>
+                    <div><label class="block text-xs text-slate-400 mb-1">Reps</label>
+                    <input type="text" id="editor-reps" placeholder="Ej. 10" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-theme-500"></div>
+                    <div><label class="block text-xs text-slate-400 mb-1">Descanso(s)</label>
+                    <input type="number" inputmode="numeric" id="editor-rest" placeholder="Ej. 90" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-theme-500"></div>
+                </div>
+
+                <button onclick="saveExerciseEdit()" class="mt-2 w-full bg-theme-600 hover:bg-theme-500 text-white py-2.5 rounded-lg text-sm font-bold transition-colors">Guardar en Rutina</button>
+            </div>
+        </div>
+    </div>
 
     <div id="toast-container"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // EL DÍA CERO EXACTO
-        const START_DATE = new Date('2026-09-07T00:00:00'); 
-        
-        const routineData = {
-            lunes: {
-                title: "Lunes: Torso + Abdomen", focus: "Pecho, Espalda Alta/Media y Core",
-                exercises: [
-                    { name: "Press de Pecho Plano", muscle: "Pecho", equipment: "Máquina/Convergente", sets: "3-4", reps: "10 (Peso Alto)", restTime: 120 },
-                    { name: "Remo Apoyado", muscle: "Espalda Media", equipment: "Máquina c/ Soporte", sets: "3-4", reps: "10 (Peso Alto)", restTime: 120 },
-                    { name: "Jalón al Pecho", muscle: "Espalda Alta", equipment: "Polea (Neutro)", sets: "3", reps: "12 (Moderado)", restTime: 90 },
-                    { name: "Press Militar Sentado", muscle: "Hombro Frontal", equipment: "Máquina", sets: "3", reps: "10 (Peso Alto)", restTime: 90 },
-                    { name: "Curl de Bíceps", muscle: "Bíceps", equipment: "Polea / Barra Z", sets: "3", reps: "12 (Moderado)", restTime: 75 },
-                    { name: "Extensión Tríceps", muscle: "Tríceps", equipment: "Polea (Cuerda)", sets: "3", reps: "12 (Moderado)", restTime: 75 },
-                    { name: "Crunch Abdominal", muscle: "Abdomen", equipment: "Polea Alta", sets: "3-4", reps: "15 (Moderado)", restTime: 60 }
-                ]
-            },
-            martes: {
-                title: "Martes: Pierna 1", focus: "Cuádriceps, Glúteos y Gemelos",
-                exercises: [
-                    { name: "Prensa Inclinada", muscle: "Cuádriceps", equipment: "Máquina 45°", sets: "4", reps: "10 (Peso Alto)", restTime: 150 },
-                    { name: "Hip Thrust", muscle: "Glúteo Mayor", equipment: "Barra / Smith", sets: "3-4", reps: "10 (Peso Alto)", restTime: 120 },
-                    { name: "Extensión Cuádriceps", muscle: "Cuádriceps Aislado", equipment: "Máquina", sets: "3", reps: "15 (Moderado)", restTime: 90 },
-                    { name: "Patada de Glúteo", muscle: "Glúteo Aislado", equipment: "Polea Baja", sets: "3", reps: "15 (Moderado)", restTime: 60 },
-                    { name: "Elevación Talones", muscle: "Gemelos", equipment: "Prensa / Pie", sets: "4", reps: "15 (Moderado)", restTime: 60 }
-                ]
-            },
-            miercoles: {
-                title: "Miércoles: Empuje + Lateral", focus: "Pecho Sup, Hombro Lateral, Abdomen",
-                exercises: [
-                    { name: "Press Inclinado", muscle: "Pecho Sup.", equipment: "Smith/Convergente", sets: "3-4", reps: "10 (Peso Alto)", restTime: 120 },
-                    { name: "Aperturas Pecho", muscle: "Pecho Aislado", equipment: "Peck Deck", sets: "3", reps: "12 (Moderado)", restTime: 90 },
-                    { name: "Elevaciones Laterales", muscle: "Hombro Lateral", equipment: "Polea / Máquina", sets: "4", reps: "15 (Moderado)", restTime: 75 },
-                    { name: "Fondos Asistidos", muscle: "Pecho Inf / Tríceps", equipment: "Máquina Asistida", sets: "3", reps: "10 (Peso Alto)", restTime: 90 },
-                    { name: "Extensión Tras Nuca", muscle: "Tríceps", equipment: "Polea Cuerda", sets: "3", reps: "12 (Moderado)", restTime: 75 },
-                    { name: "Elevación Piernas", muscle: "Abdomen Inferior", equipment: "Silla Romana", sets: "3", reps: "15 (Moderado)", restTime: 60 }
-                ]
-            },
-            jueves: {
-                title: "Jueves: Tirón + Espalda", focus: "Amplitud de Espalda y Brazos",
-                exercises: [
-                    { name: "Jalón Unilateral/Abierto", muscle: "Espalda Alta", equipment: "Máquina/Polea", sets: "3-4", reps: "10 (Peso Alto)", restTime: 120 },
-                    { name: "Remo Sentado (V)", muscle: "Espalda Baja", equipment: "Polea Baja", sets: "3-4", reps: "10 (Peso Alto)", restTime: 120 },
-                    { name: "Extensiones Lumbares", muscle: "Lumbares", equipment: "Banco Hiperext.", sets: "3", reps: "15 (Moderado)", restTime: 60 },
-                    { name: "Pájaros Invertidos", muscle: "Hombro Post.", equipment: "Peck Deck Invertido", sets: "3-4", reps: "15 (Moderado)", restTime: 75 },
-                    { name: "Curl Predicador", muscle: "Bíceps Aislado", equipment: "Máquina Scott", sets: "3", reps: "12 (Moderado)", restTime: 75 },
-                    { name: "Curl Invertido", muscle: "Antebrazos", equipment: "Polea Baja / Barra", sets: "3", reps: "12 (Moderado)", restTime: 60 }
-                ]
-            },
-            viernes: {
-                title: "Viernes: Pierna 2", focus: "Isquiotibiales y Glúteo Medio",
-                exercises: [
-                    { name: "Peso Muerto Rumano", muscle: "Isquios/Glúteo", equipment: "Barra/Smith", sets: "3-4", reps: "10 (Peso Alto)", restTime: 150 },
-                    { name: "Curl Femoral", muscle: "Isquios", equipment: "Máquina", sets: "4", reps: "12 (Moderado)", restTime: 90 },
-                    { name: "Abductores", muscle: "Glúteo Medio", equipment: "Máquina Sentado", sets: "3", reps: "15 (Moderado)", restTime: 60 },
-                    { name: "Elevación Talones", muscle: "Sóleo", equipment: "Máquina Sentado", sets: "3-4", reps: "15 (Moderado)", restTime: 60 },
-                    { name: "Plancha Abdominal", muscle: "Core", equipment: "Suelo", sets: "3-4", reps: "1 min", restTime: 60 }
-                ]
-            }
-        };
-
-        window.currentUser = 'Max'; 
-        window.currentDay = 'lunes';
-        let timerInterval;
-        let chartInstances = {};
-        
-        // Colores de la app (Naranja vs Carmesí Intenso y brillante)
-        const userColors = { 'Max': '#f97316', 'Pipe': '#ef4444' };
-        
-        let isCloudActive = false;
-        let globalExerciseHistory = [];
-        let globalBodyWeights = [];
-        let app, db, auth;
-        let hasAutoSelectedDay = false;
-
-        // TUS CREDENCIALES EXACTAS
+        // TUS CREDENCIALES DE FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyDo8bDMUCkWWa13S1wlia-rO4UF0c4mNBo",
             authDomain: "trackfit-database-83ab5.firebaseapp.com",
@@ -349,16 +448,80 @@
             messagingSenderId: "233927465610",
             appId: "1:233927465610:web:f8569dad5596ca2c356b73"
         };
-        const collectionAppId = "trackfit-pro-v2";
+        const collectionAppId = "trackfit-pro-v3"; // Versionada para DB limpia
 
-        // MÉTODOS DE FECHA Y SALUDO
+        // CONSTANTES GLOBALES
+        const START_DATE = new Date('2026-09-07T00:00:00');
+        
+        // ESTADO DE LA APLICACIÓN (Cargado de LocalStorage o Defaults)
+        window.appUsers = JSON.parse(localStorage.getItem('tf_users')) || [
+            { id: 'Max', name: 'Max', color: '#f97316' }, 
+            { id: 'Pipe', name: 'Pipe', color: '#dc2626' } 
+        ];
+
+        const defaultRoutineData = {
+            lunes: { title: "Lunes: Torso + Abdomen", focus: "Pecho, Espalda Alta/Media y Core", exercises: [
+                { name: "Press de Pecho Plano", muscle: "Pecho", equipment: "Máquina/Convergente", sets: "3-4", reps: "10 (Peso Alto)", restTime: 120 },
+                { name: "Remo Apoyado", muscle: "Espalda", equipment: "Máquina c/ Soporte", sets: "3-4", reps: "10 (Peso Alto)", restTime: 120 },
+                { name: "Jalón al Pecho", muscle: "Espalda", equipment: "Polea (Neutro)", sets: "3", reps: "12 (Moderado)", restTime: 90 },
+                { name: "Press Militar Sentado", muscle: "Hombro", equipment: "Máquina", sets: "3", reps: "10 (Peso Alto)", restTime: 90 },
+                { name: "Curl de Bíceps", muscle: "Brazos", equipment: "Polea / Barra Z", sets: "3", reps: "12 (Moderado)", restTime: 75 },
+                { name: "Extensión Tríceps", muscle: "Brazos", equipment: "Polea (Cuerda)", sets: "3", reps: "12 (Moderado)", restTime: 75 },
+                { name: "Crunch Abdominal", muscle: "Core", equipment: "Polea Alta", sets: "3-4", reps: "15 (Moderado)", restTime: 60 }
+            ]},
+            martes: { title: "Martes: Pierna 1", focus: "Cuádriceps, Glúteos y Gemelos", exercises: [
+                { name: "Prensa Inclinada", muscle: "Pierna", equipment: "Máquina 45°", sets: "4", reps: "10 (Peso Alto)", restTime: 150 },
+                { name: "Hip Thrust", muscle: "Pierna", equipment: "Barra / Smith", sets: "3-4", reps: "10 (Peso Alto)", restTime: 120 },
+                { name: "Extensión Cuádriceps", muscle: "Pierna", equipment: "Máquina", sets: "3", reps: "15 (Moderado)", restTime: 90 },
+                { name: "Patada de Glúteo", muscle: "Pierna", equipment: "Polea Baja", sets: "3", reps: "15 (Moderado)", restTime: 60 },
+                { name: "Elevación Talones", muscle: "Pierna", equipment: "Prensa / Pie", sets: "4", reps: "15 (Moderado)", restTime: 60 }
+            ]},
+            miercoles: { title: "Miércoles: Empuje + Lateral", focus: "Pecho Sup, Hombro Lateral, Abdomen", exercises: [
+                { name: "Press Inclinado", muscle: "Pecho", equipment: "Smith/Convergente", sets: "3-4", reps: "10 (Peso Alto)", restTime: 120 },
+                { name: "Aperturas Pecho", muscle: "Pecho", equipment: "Peck Deck", sets: "3", reps: "12 (Moderado)", restTime: 90 },
+                { name: "Elevaciones Laterales", muscle: "Hombro", equipment: "Polea / Máquina", sets: "4", reps: "15 (Moderado)", restTime: 75 },
+                { name: "Fondos Asistidos", muscle: "Pecho", equipment: "Máquina Asistida", sets: "3", reps: "10 (Peso Alto)", restTime: 90 },
+                { name: "Extensión Tras Nuca", muscle: "Brazos", equipment: "Polea Cuerda", sets: "3", reps: "12 (Moderado)", restTime: 75 },
+                { name: "Elevación Piernas", muscle: "Core", equipment: "Silla Romana", sets: "3", reps: "15 (Moderado)", restTime: 60 }
+            ]},
+            jueves: { title: "Jueves: Tirón + Espalda", focus: "Amplitud de Espalda y Brazos", exercises: [
+                { name: "Jalón Unilateral/Abierto", muscle: "Espalda", equipment: "Máquina/Polea", sets: "3-4", reps: "10 (Peso Alto)", restTime: 120 },
+                { name: "Remo Sentado (V)", muscle: "Espalda", equipment: "Polea Baja", sets: "3-4", reps: "10 (Peso Alto)", restTime: 120 },
+                { name: "Extensiones Lumbares", muscle: "Espalda", equipment: "Banco Hiperext.", sets: "3", reps: "15 (Moderado)", restTime: 60 },
+                { name: "Pájaros Invertidos", muscle: "Hombro", equipment: "Peck Deck Invertido", sets: "3-4", reps: "15 (Moderado)", restTime: 75 },
+                { name: "Curl Predicador", muscle: "Brazos", equipment: "Máquina Scott", sets: "3", reps: "12 (Moderado)", restTime: 75 },
+                { name: "Curl Invertido", muscle: "Brazos", equipment: "Polea Baja / Barra", sets: "3", reps: "12 (Moderado)", restTime: 60 }
+            ]},
+            viernes: { title: "Viernes: Pierna 2", focus: "Isquiotibiales y Glúteo Medio", exercises: [
+                { name: "Peso Muerto Rumano", muscle: "Pierna", equipment: "Barra/Smith", sets: "3-4", reps: "10 (Peso Alto)", restTime: 150 },
+                { name: "Curl Femoral", muscle: "Pierna", equipment: "Máquina", sets: "4", reps: "12 (Moderado)", restTime: 90 },
+                { name: "Abductores", muscle: "Pierna", equipment: "Máquina Sentado", sets: "3", reps: "15 (Moderado)", restTime: 60 },
+                { name: "Elevación Talones", muscle: "Pierna", equipment: "Máquina Sentado", sets: "3-4", reps: "15 (Moderado)", restTime: 60 },
+                { name: "Plancha Abdominal", muscle: "Core", equipment: "Suelo", sets: "3-4", reps: "1 min", restTime: 60 }
+            ]}
+        };
+
+        window.routineData = JSON.parse(localStorage.getItem('tf_routine_data')) || defaultRoutineData;
+
+        // Variables operativas
+        window.currentUser = window.appUsers[0].id; 
+        window.currentDay = 'lunes';
+        let timerInterval;
+        let chartInstances = {};
+        
+        let isCloudActive = false;
+        let globalExerciseHistory = [];
+        let globalBodyWeights = [];
+        let app, db, auth;
+        let hasAutoSelectedDay = false;
+
         function getLocalISODate() {
             const tzOffset = (new Date()).getTimezoneOffset() * 60000;
             return (new Date(Date.now() - tzOffset)).toISOString().slice(0, 10);
         }
 
-        // Formato estricto: "06/Oct./2026"
-        function formatAestheticDate(isoDate) {
+        // FORMATO ESTRICTO: 06/Oct./2026
+        window.formatAestheticDate = function(isoDate) {
             if(!isoDate) return '';
             const [y, m, d] = isoDate.split('-');
             const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -368,7 +531,7 @@
         window.updateGlobalDate = function() {
             const rawDate = document.getElementById('training-date').value;
             document.getElementById('display-training-date').textContent = formatAestheticDate(rawDate);
-            if (window.currentDay !== 'progreso') renderExercises(window.currentDay);
+            if (window.currentDay !== 'progreso' && !window.currentDay.includes('manager')) renderExercises(window.currentDay);
         }
 
         window.updateBwDate = function() {
@@ -376,17 +539,34 @@
             document.getElementById('display-bw-date').textContent = formatAestheticDate(rawDate);
         }
 
+        function hexToRgb(hex) {
+            let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? `${parseInt(result[1], 16)} ${parseInt(result[2], 16)} ${parseInt(result[3], 16)}` : '249 115 22';
+        }
+
+        window.applyTheme = function(userId) {
+            const userObj = window.appUsers.find(u => u.id === userId);
+            if(userObj) {
+                const rgb = hexToRgb(userObj.color);
+                document.documentElement.style.setProperty('--theme-500', rgb);
+                // Aproximaciones para 400 y 600
+                document.documentElement.style.setProperty('--theme-400', rgb); 
+                document.documentElement.style.setProperty('--theme-600', rgb);
+            }
+        }
+
         function updateGreeting() {
             const hour = new Date().getHours();
             let timeGreeting = hour < 12 ? 'Buenos días' : (hour < 19 ? 'Buenas tardes' : 'Buenas noches');
-            document.getElementById('dynamic-greeting').textContent = `${timeGreeting}, ${window.currentUser} 💪`;
+            const userObj = window.appUsers.find(u => u.id === window.currentUser);
+            const name = userObj ? userObj.name : window.currentUser;
+            document.getElementById('dynamic-greeting').textContent = `${timeGreeting}, ${name} 💪`;
         }
 
         function updateSyncStatus(status) {
             const dot = document.getElementById('sync-dot');
             const txt = document.getElementById('sync-text');
             dot.className = 'w-2 h-2 rounded-full';
-            
             if(status === 'loading') {
                 dot.classList.add('bg-yellow-500', 'animate-pulse'); txt.textContent = 'Conectando...'; txt.className = 'text-[10px] font-bold text-yellow-500 uppercase tracking-wider';
             } else if (status === 'success') {
@@ -403,11 +583,10 @@
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
-                
                 await signInAnonymously(auth);
                 setupRealtimeListeners();
             } catch (error) {
-                console.warn("Firebase Auth falló, usando LocalStorage.", error);
+                console.warn("Firebase falló. Usando LocalStorage.", error);
                 updateSyncStatus('error');
                 autoSelectDay();
             }
@@ -416,24 +595,38 @@
         function setupRealtimeListeners() {
             if (!auth.currentUser) return;
             
-            onSnapshot(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'exerciseHistory'), 
-                (snapshot) => {
-                    globalExerciseHistory = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-                    updateSyncStatus('success');
-                    if (window.currentDay === 'progreso') renderProgress(); else renderExercises(window.currentDay);
-                },
-                (error) => { console.warn("Error Firestore:", error); updateSyncStatus('error'); }
-            );
+            // Sync Config (Usuarios y Rutinas modificadas)
+            onSnapshot(doc(db, 'artifacts', collectionAppId, 'public', 'config'), (docSnap) => {
+                if(docSnap.exists()) {
+                    const data = docSnap.data();
+                    if(data.users) { window.appUsers = data.users; localStorage.setItem('tf_users', JSON.stringify(data.users)); renderUserTabs(); renderProfilesManager(); applyTheme(window.currentUser); }
+                    if(data.routine) { window.routineData = data.routine; localStorage.setItem('tf_routine_data', JSON.stringify(data.routine)); renderTabs(); if(window.currentDay!=='progreso' && !window.currentDay.includes('manager')) renderExercises(window.currentDay); }
+                }
+            });
 
-            onSnapshot(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'bodyWeights'), 
-                (snapshot) => {
-                    globalBodyWeights = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-                    if (window.currentDay === 'progreso') renderProgress();
-                },
-                (error) => { updateSyncStatus('error'); }
-            );
-            
+            onSnapshot(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'exerciseHistory'), (snapshot) => {
+                globalExerciseHistory = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+                updateSyncStatus('success');
+                if (window.currentDay === 'progreso') renderProgress(); else if(!window.currentDay.includes('manager')) renderExercises(window.currentDay);
+            }, (error) => { updateSyncStatus('error'); });
+
+            onSnapshot(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'bodyWeights'), (snapshot) => {
+                globalBodyWeights = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+                if (window.currentDay === 'progreso') renderProgress();
+            });
             autoSelectDay();
+        }
+
+        async function syncConfigToCloud() {
+            if(isCloudActive && auth?.currentUser) {
+                try {
+                    await setDoc(doc(db, 'artifacts', collectionAppId, 'public', 'config'), {
+                        users: window.appUsers,
+                        routine: window.routineData,
+                        updatedAt: new Date().getTime()
+                    });
+                } catch(e) { console.warn("Error sync config", e); }
+            }
         }
 
         function autoSelectDay() {
@@ -444,103 +637,87 @@
                 else window.currentDay = 'progreso';
                 hasAutoSelectedDay = true;
             }
-            
-            // Set input values
             const todayISO = getLocalISODate();
             document.getElementById('training-date').value = todayISO;
             document.getElementById('bw-date').value = todayISO;
+            updateGlobalDate(); updateBwDate();
             
-            // Set display texts
-            document.getElementById('display-training-date').textContent = formatAestheticDate(todayISO);
-            document.getElementById('display-bw-date').textContent = formatAestheticDate(todayISO);
-            
-            updateGreeting();
+            renderUserTabs();
             renderTabs();
-            if(window.currentDay === 'progreso') renderProgress(); else renderExercises(window.currentDay);
+            applyTheme(window.currentUser);
+            switchView(window.currentDay);
         }
 
-        window.switchUser = function(user) {
-            window.currentUser = user;
-            document.body.setAttribute('data-user', user);
-            document.getElementById('btn-user-Max').classList.toggle('active-user', user === 'Max');
-            document.getElementById('btn-user-Pipe').classList.toggle('active-user', user === 'Pipe');
+        window.renderUserTabs = function() {
+            const container = document.getElementById('user-selector-container');
+            container.innerHTML = '';
+            window.appUsers.forEach(user => {
+                const btn = document.createElement('button');
+                btn.className = `flex-1 user-tab text-xs font-bold px-4 py-2 rounded-md text-slate-300 whitespace-nowrap ${window.currentUser === user.id ? 'active-user' : ''}`;
+                btn.textContent = user.name;
+                btn.onclick = () => {
+                    window.currentUser = user.id;
+                    applyTheme(user.id);
+                    renderUserTabs();
+                    updateGreeting();
+                    if (window.currentDay === 'progreso') renderProgress(); else if(!window.currentDay.includes('manager')) renderExercises(window.currentDay);
+                };
+                if(window.currentUser === user.id) {
+                    btn.style.backgroundColor = user.color;
+                    btn.style.color = "white";
+                }
+                container.appendChild(btn);
+            });
             updateGreeting();
-            if (window.currentDay === 'progreso') renderProgress(); else renderExercises(window.currentDay);
         }
 
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type === 'error' ? 'error' : ''}`;
-            toast.innerHTML = message;
-            container.appendChild(toast);
-            setTimeout(() => { toast.style.animation = 'fadeOut 0.3s ease forwards'; setTimeout(() => toast.remove(), 300); }, 1500);
+        window.renderTabs = function() {
+            const container = document.getElementById('tabs-container'); container.innerHTML = '';
+            Object.keys(window.routineData).forEach(dayId => {
+                const dayName = dayId.charAt(0).toUpperCase() + dayId.slice(1);
+                const btn = document.createElement('button');
+                btn.className = `tab-btn flex-shrink-0 w-full md:w-auto text-left px-4 py-3 rounded-xl border border-slate-700/50 text-slate-300 mb-2 ${dayId === window.currentDay ? 'active' : 'hover:bg-slate-800'}`;
+                btn.innerHTML = `<span class="font-semibold text-sm">${dayName}</span>`;
+                btn.onclick = () => { switchView(dayId); };
+                container.appendChild(btn);
+            });
+            
+            const btnProg = document.createElement('button');
+            btnProg.className = `tab-btn flex-shrink-0 w-full md:w-auto text-left px-4 py-3 rounded-xl border border-slate-600/50 text-slate-200 shadow-lg bg-slate-800/50 mt-2 ${window.currentDay === 'progreso' ? 'active' : 'hover:bg-slate-700/50'}`;
+            btnProg.innerHTML = `<span class="font-bold text-sm">📈 Ver Avances</span>`;
+            btnProg.onclick = () => { switchView('progreso'); };
+            container.appendChild(btnProg);
         }
 
-        function playBeep() {
-            try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator(); const gain = ctx.createGain();
-                osc.connect(gain); gain.connect(ctx.destination);
-                osc.type = 'sine'; osc.frequency.setValueAtTime(800, ctx.currentTime);
-                gain.gain.setValueAtTime(0.1, ctx.currentTime); osc.start(); osc.stop(ctx.currentTime + 0.3);
-            } catch(e) {}
-        }
+        window.switchView = function(viewId) {
+            window.currentDay = viewId;
+            document.querySelectorAll('.app-view').forEach(v => v.classList.add('hidden'));
+            
+            // Actualizar UI de pestañas
+            document.querySelectorAll('#tabs-container .tab-btn').forEach(btn => btn.classList.remove('active'));
+            if(window.routineData[viewId] || viewId === 'progreso') { renderTabs(); } // Re-render to set active state
+            
+            document.getElementById('btn-view-routine').classList.toggle('active', viewId === 'routine-manager');
+            document.getElementById('btn-view-profiles').classList.toggle('active', viewId === 'profile-manager');
 
-        window.startTimer = function(seconds) {
-            clearInterval(timerInterval);
-            let timeLeft = seconds; showToast(`⏱ Descanso: ${timeLeft}s`);
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                if (timeLeft <= 0) { clearInterval(timerInterval); playBeep(); showToast('🔥 ¡TIEMPO! A la serie.'); }
-            }, 1000);
-        }
-
-        function getWeekNumber(dateStr) {
-            const dateObj = new Date(dateStr + 'T12:00:00');
-            const diffDays = Math.floor((dateObj - START_DATE) / (1000 * 60 * 60 * 24));
-            const weekNum = Math.floor(diffDays / 7) + 1;
-            return weekNum > 0 ? weekNum : 1; 
-        }
-
-        function playSavedAnimation(btnId) {
-            const btn = document.getElementById(btnId);
-            if(btn) {
-                if (btn.dataset.animating === "true") return; 
-                const originalText = btn.innerHTML;
-                
-                btn.dataset.animating = "true";
-                btn.classList.add('btn-saved');
-                btn.innerHTML = '¡Guardado! ✅';
-                
-                setTimeout(() => {
-                    btn.classList.remove('btn-saved');
-                    btn.innerHTML = originalText;
-                    btn.dataset.animating = "false";
-                }, 1500);
-            }
-        }
-
-        window.toggleUnit = function(dayId, index, unit) {
-            document.getElementById(`unit-${dayId}-${index}`).value = unit;
-            const btnKg = document.getElementById(`btn-kg-${dayId}-${index}`);
-            const btnLbs = document.getElementById(`btn-lbs-${dayId}-${index}`);
-            if(unit === 'kg') {
-                btnKg.className = 'px-3 py-1 rounded-md text-xs font-bold transition-all duration-200 bg-emerald-500 text-white shadow-md';
-                btnLbs.className = 'px-3 py-1 rounded-md text-xs font-bold transition-all duration-200 text-slate-400 hover:text-slate-200';
-            } else {
-                btnLbs.className = 'px-3 py-1 rounded-md text-xs font-bold transition-all duration-200 bg-emerald-500 text-white shadow-md';
-                btnKg.className = 'px-3 py-1 rounded-md text-xs font-bold transition-all duration-200 text-slate-400 hover:text-slate-200';
+            if(window.routineData[viewId]) {
+                document.getElementById('exercises-view').classList.remove('hidden');
+                renderExercises(viewId);
+            } else if (viewId === 'progreso') {
+                document.getElementById('progress-view').classList.remove('hidden');
+                renderProgress();
+            } else if (viewId === 'routine-manager') {
+                document.getElementById('routine-manager-view').classList.remove('hidden');
+                loadDayForEdit();
+            } else if (viewId === 'profile-manager') {
+                document.getElementById('profile-manager-view').classList.remove('hidden');
+                renderProfilesManager();
             }
         }
 
         function getMergedHistory(user, dayId, index) {
             const localHist = JSON.parse(localStorage.getItem(`tf_pro_hist_${user}_${dayId}_${index}`)) || [];
-            let cloudHist = [];
-            if(isCloudActive) {
-                cloudHist = globalExerciseHistory.filter(e => e.user === user && e.dayId === dayId && e.exerciseIndex === index);
-            }
-            
+            let cloudHist = isCloudActive ? globalExerciseHistory.filter(e => e.user === user && e.dayId === dayId && e.exerciseIndex === index) : [];
             const mergedMap = new Map();
             localHist.forEach(e => mergedMap.set(e.dateStr, e));
             cloudHist.forEach(e => mergedMap.set(e.dateStr, e));
@@ -549,10 +726,7 @@
 
         function getMergedBodyWeights(user) {
             const localHist = JSON.parse(localStorage.getItem(`tf_pro_bw_${user}`)) || [];
-            let cloudHist = [];
-            if(isCloudActive) {
-                cloudHist = globalBodyWeights.filter(e => e.user === user);
-            }
+            let cloudHist = isCloudActive ? globalBodyWeights.filter(e => e.user === user) : [];
             const mergedMap = new Map();
             localHist.forEach(e => mergedMap.set(e.dateStr, e));
             cloudHist.forEach(e => mergedMap.set(e.dateStr, e));
@@ -564,17 +738,46 @@
             return hist.find(e => e.dateStr === dateVal);
         }
 
+        function getWeekNumber(dateStr) {
+            const dateObj = new Date(dateStr + 'T12:00:00');
+            const diffDays = Math.floor((dateObj - START_DATE) / (1000 * 60 * 60 * 24));
+            const weekNum = Math.floor(diffDays / 7) + 1;
+            return weekNum > 0 ? weekNum : 1; 
+        }
+
+        window.toggleUnit = function(dayId, index, unit) {
+            document.getElementById(`unit-${dayId}-${index}`).value = unit;
+            const btnKg = document.getElementById(`btn-kg-${dayId}-${index}`);
+            const btnLbs = document.getElementById(`btn-lbs-${dayId}-${index}`);
+            if(unit === 'kg') {
+                btnKg.className = 'px-3 py-1.5 rounded bg-emerald-500 text-white font-bold text-xs shadow';
+                btnLbs.className = 'px-3 py-1.5 rounded bg-slate-800 text-slate-400 font-bold text-xs hover:bg-slate-700';
+            } else {
+                btnLbs.className = 'px-3 py-1.5 rounded bg-emerald-500 text-white font-bold text-xs shadow';
+                btnKg.className = 'px-3 py-1.5 rounded bg-slate-800 text-slate-400 font-bold text-xs hover:bg-slate-700';
+            }
+        }
+
+        function playSavedAnimation(btnId) {
+            const btn = document.getElementById(btnId);
+            if(btn && btn.dataset.animating !== "true") {
+                const originalText = btn.innerHTML;
+                btn.dataset.animating = "true"; btn.classList.add('btn-saved'); btn.innerHTML = '¡Guardado! ✅';
+                setTimeout(() => { btn.classList.remove('btn-saved'); btn.innerHTML = originalText; btn.dataset.animating = "false"; }, 1500);
+            }
+        }
+
         window.saveWeight = async function(dayId, index) {
             const dateVal = document.getElementById('training-date').value;
             const input = document.getElementById(`weight-${dayId}-${index}`);
             const unit = document.getElementById(`unit-${dayId}-${index}`).value;
             const val = parseFloat(input.value.trim());
             
-            if(!dateVal) { showToast("Fecha inválida", "error"); return; }
+            if(!dateVal) return;
             const timestamp = new Date(dateVal + 'T12:00:00').getTime();
             const weekNum = getWeekNumber(dateVal);
             
-            // 1. Guardado LOCAL (Siempre salva tu data)
+            // 1. LOCAL
             let lsHist = JSON.parse(localStorage.getItem(`tf_pro_hist_${window.currentUser}_${dayId}_${index}`)) || [];
             if(isNaN(val)) { lsHist = lsHist.filter(e => e.dateStr !== dateVal); } 
             else {
@@ -584,7 +787,7 @@
             }
             localStorage.setItem(`tf_pro_hist_${window.currentUser}_${dayId}_${index}`, JSON.stringify(lsHist));
 
-            // 2. Guardado NUBE (Sincronización a prueba de fallos)
+            // 2. CLOUD
             if (isCloudActive && auth?.currentUser) {
                 const existing = globalExerciseHistory.find(e => e.user === window.currentUser && e.dayId === dayId && e.exerciseIndex === index && e.dateStr === dateVal);
                 try {
@@ -593,29 +796,27 @@
                         if(existing) await updateDoc(doc(db, 'artifacts', collectionAppId, 'public', 'data', 'exerciseHistory', existing.id), dataObj);
                         else await addDoc(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'exerciseHistory'), dataObj);
                     }
-                } catch(e) { console.error("Error nube:", e); }
+                } catch(e) {}
             }
             
-            if(!isNaN(val)) {
-                playSavedAnimation(`btn-save-${dayId}-${index}`);
-            }
+            if(!isNaN(val)) playSavedAnimation(`btn-save-${dayId}-${index}`);
             if(!isCloudActive) updateCharts(); 
         }
 
         window.saveBodyWeight = async function() {
             const dateVal = document.getElementById('bw-date').value;
             const weightVal = parseFloat(document.getElementById('bw-weight').value);
-            if(!dateVal || isNaN(weightVal)) { showToast("Ingresa un peso válido", "error"); return; }
+            if(!dateVal || isNaN(weightVal)) return;
             const timestamp = new Date(dateVal + 'T12:00:00').getTime();
 
-            // 1. Local
+            // LOCAL
             let bwHist = JSON.parse(localStorage.getItem(`tf_pro_bw_${window.currentUser}`)) || [];
             let idx = bwHist.findIndex(e => e.dateStr === dateVal);
             if(idx >= 0) bwHist[idx].weight = weightVal; else bwHist.push({dateStr: dateVal, weight: weightVal, timestamp});
             bwHist.sort((a,b)=>a.timestamp-b.timestamp);
             localStorage.setItem(`tf_pro_bw_${window.currentUser}`, JSON.stringify(bwHist));
 
-            // 2. Nube
+            // CLOUD
             if (isCloudActive && auth?.currentUser) {
                 const existing = globalBodyWeights.find(e => e.user === window.currentUser && e.dateStr === dateVal);
                 try {
@@ -624,37 +825,14 @@
                     else await addDoc(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'bodyWeights'), dataObj);
                 } catch(e) {}
             }
-            
-            playSavedAnimation('btn-save-bw');
-            document.getElementById('bw-weight').value = "";
-            updateCharts();
-        }
-
-        window.renderTabs = function() {
-            const container = document.getElementById('tabs-container'); container.innerHTML = '';
-            Object.keys(routineData).forEach(dayId => {
-                const dayName = dayId.charAt(0).toUpperCase() + dayId.slice(1);
-                const btn = document.createElement('button');
-                btn.className = `tab-btn flex-shrink-0 w-full md:w-auto text-left px-4 py-3 rounded-xl border border-slate-700/50 text-slate-300 mb-2 flex items-center justify-between ${dayId === window.currentDay ? 'active' : 'hover:bg-slate-800'}`;
-                btn.innerHTML = `<span class="font-semibold text-sm">${dayName}</span>`;
-                btn.onclick = () => { window.currentDay = dayId; window.renderTabs(); window.renderExercises(dayId); };
-                container.appendChild(btn);
-            });
-
-            const sep = document.createElement('div'); sep.className = "w-full h-px bg-slate-800 my-2 hidden md:block"; container.appendChild(sep);
-
-            const btnProg = document.createElement('button');
-            btnProg.className = `tab-btn flex-shrink-0 w-full md:w-auto text-left px-4 py-3 rounded-xl border border-slate-600/50 text-slate-200 shadow-lg bg-slate-800/50 ${window.currentDay === 'progreso' ? 'active' : 'hover:bg-slate-700/50'}`;
-            btnProg.innerHTML = `<span class="font-bold text-sm flex items-center gap-2">📈 Ver Avances</span>`;
-            btnProg.onclick = () => { window.currentDay = 'progreso'; window.renderTabs(); window.renderProgress(); };
-            container.appendChild(btnProg);
+            playSavedAnimation('btn-save-bw'); document.getElementById('bw-weight').value = ""; updateCharts();
         }
 
         window.renderExercises = function(dayId) {
-            document.getElementById('exercises-view').classList.remove('hidden');
-            document.getElementById('progress-view').classList.add('hidden');
             const container = document.getElementById('exercises-container');
-            const dayData = routineData[dayId];
+            const dayData = window.routineData[dayId];
+            if(!dayData) return;
+            
             const selectedDate = document.getElementById('training-date').value;
             const weekNum = getWeekNumber(selectedDate);
             
@@ -668,19 +846,16 @@
                 const currentUnit = saved ? saved.unit : 'kg';
                 
                 const card = document.createElement('div');
-                // h-full asegura que todas las tarjetas sean iguales de altas en la cuadrícula
-                card.className = 'glass-card rounded-2xl flex flex-col p-5 relative border-t-2 border-t-theme-500/50 h-full';
+                card.className = 'glass-card rounded-2xl flex flex-col p-5 border-t-2 border-t-theme-500/50';
                 
                 card.innerHTML = `
-                    <div class="flex flex-col mb-4">
-                        <div class="flex justify-between items-start gap-2 mb-1">
-                            <h3 class="text-base font-bold text-white leading-tight">${index + 1}. ${ex.name}</h3>
-                            <span class="bg-theme-500/10 text-theme-400 text-[9px] uppercase tracking-wider font-bold px-2 py-1 rounded border border-theme-500/30 whitespace-nowrap flex-shrink-0">${ex.muscle}</span>
-                        </div>
-                        <p class="text-[11px] text-slate-400">⚙️ ${ex.equipment}</p>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-base font-bold text-white leading-tight w-3/4">${index + 1}. ${ex.name}</h3>
+                        <span class="bg-theme-500/10 text-theme-400 text-[9px] uppercase tracking-wider font-bold px-2 py-1 rounded border border-theme-500/30 whitespace-nowrap ml-2">${ex.muscle}</span>
                     </div>
+                    <p class="text-[11px] text-slate-400 mb-4">⚙️ ${ex.equipment}</p>
                     
-                    <div class="grid grid-cols-2 gap-3 mb-5">
+                    <div class="grid grid-cols-2 gap-3 mb-4">
                         <div class="bg-slate-900/80 rounded-lg p-2 text-center border border-slate-700/50">
                             <span class="block text-[9px] text-slate-400 uppercase tracking-widest mb-1">Series</span>
                             <strong class="text-sm text-white">${ex.sets}</strong>
@@ -691,29 +866,20 @@
                         </div>
                     </div>
 
-                    <!-- Layout robusto y responsive para inputs y botones -->
-                    <div class="mt-auto pt-4 border-t border-slate-700/50">
-                        <label class="block text-[10px] text-slate-400 uppercase tracking-widest mb-2 font-semibold">Carga de trabajo:</label>
-                        
-                        <div class="flex flex-col gap-3">
-                            <!-- Fila 1: Input y Unidad -->
-                            <div class="flex items-center gap-2">
-                                <input type="hidden" id="unit-${dayId}-${index}" value="${currentUnit}">
-                                <input type="number" step="0.5" inputmode="decimal" id="weight-${dayId}-${index}" value="${currentWeight}" placeholder="Ej. 45" class="flex-1 w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2.5 text-white text-sm font-bold focus:outline-none focus:border-theme-500 transition-colors shadow-inner">
-                                <div class="flex bg-slate-900 rounded-lg p-1.5 border border-slate-700 flex-shrink-0 shadow-inner">
-                                    <button type="button" id="btn-kg-${dayId}-${index}" onclick="toggleUnit('${dayId}', ${index}, 'kg')" class="px-3 py-1 rounded-md text-xs font-bold transition-all duration-200 ${currentUnit==='kg'?'bg-emerald-500 text-white shadow-md':'text-slate-400 hover:text-slate-200'}">KG</button>
-                                    <button type="button" id="btn-lbs-${dayId}-${index}" onclick="toggleUnit('${dayId}', ${index}, 'lbs')" class="px-3 py-1 rounded-md text-xs font-bold transition-all duration-200 ${currentUnit==='lbs'?'bg-emerald-500 text-white shadow-md':'text-slate-400 hover:text-slate-200'}">LBS</button>
+                    <div class="mt-auto border-t border-slate-700/50 pt-4 flex flex-col gap-3">
+                        <label class="block text-[10px] text-slate-400 uppercase tracking-widest font-bold">Carga de Trabajo:</label>
+                        <div class="flex flex-col xl:flex-row gap-3">
+                            <div class="flex-1 flex gap-2">
+                                <input type="number" step="0.5" inputmode="decimal" id="weight-${dayId}-${index}" value="${currentWeight}" placeholder="Ej. 45" class="flex-1 w-0 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2.5 text-white text-base font-bold focus:outline-none focus:border-theme-500 shadow-inner">
+                                <div class="flex bg-slate-900 rounded-lg p-1 border border-slate-700 shadow-inner">
+                                    <input type="hidden" id="unit-${dayId}-${index}" value="${currentUnit}">
+                                    <button onclick="toggleUnit('${dayId}', ${index}, 'kg')" id="btn-kg-${dayId}-${index}" class="px-3 py-1.5 rounded text-xs font-bold transition-all ${currentUnit==='kg'?'bg-emerald-500 text-white shadow':'bg-slate-800 text-slate-400 hover:bg-slate-700'}">KG</button>
+                                    <button onclick="toggleUnit('${dayId}', ${index}, 'lbs')" id="btn-lbs-${dayId}-${index}" class="px-3 py-1.5 rounded text-xs font-bold transition-all ${currentUnit==='lbs'?'bg-emerald-500 text-white shadow':'bg-slate-800 text-slate-400 hover:bg-slate-700'}">LBS</button>
                                 </div>
                             </div>
-                            
-                            <!-- Fila 2: Botones de Acción -->
-                            <div class="flex items-center gap-2">
-                                <button onclick="startTimer(${ex.restTime})" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl text-xs font-semibold transition-colors border border-slate-600 shadow-sm flex items-center justify-center gap-2 active:scale-95">
-                                    ⏱ Descanso (${ex.restTime}s)
-                                </button>
-                                <button id="btn-save-${dayId}-${index}" onclick="saveWeight('${dayId}', ${index})" class="w-28 bg-theme-600 hover:bg-theme-500 text-white py-2.5 rounded-xl text-xs font-bold transition-all duration-300 shadow-lg shadow-theme-500/30 active:scale-95">
-                                    Guardar
-                                </button>
+                            <div class="flex gap-2">
+                                <button onclick="startTimer(${ex.restTime})" class="flex-1 xl:flex-none xl:w-28 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-600 active:scale-95 py-2.5 flex items-center justify-center gap-1">⏱ ${ex.restTime}s</button>
+                                <button id="btn-save-${dayId}-${index}" onclick="saveWeight('${dayId}', ${index})" class="flex-1 xl:flex-none xl:w-24 bg-theme-600 hover:bg-theme-500 text-white rounded-lg text-sm font-bold shadow-lg shadow-theme-500/30 active:scale-95 py-2.5 transition-colors">Guardar</button>
                             </div>
                         </div>
                     </div>
@@ -723,9 +889,16 @@
         }
 
         window.renderProgress = function() {
-            document.getElementById('exercises-view').classList.add('hidden');
-            document.getElementById('progress-view').classList.remove('hidden');
             updateCharts();
+            // Llenar select de días si está vacío
+            const select = document.getElementById('day-progress-select');
+            if(select.options.length <= 1) {
+                Object.keys(window.routineData).forEach(dayId => {
+                    const opt = document.createElement('option');
+                    opt.value = dayId; opt.textContent = window.routineData[dayId].title;
+                    select.appendChild(opt);
+                });
+            }
         }
 
         function extractWeightInKg(entry) {
@@ -738,57 +911,58 @@
         function updateCharts() {
             Chart.defaults.color = '#94a3b8'; Chart.defaults.font.family = 'Inter';
             
-            // 1. DATA BW 
-            const bwMax = getMergedBodyWeights('Max');
-            const bwPipe = getMergedBodyWeights('Pipe');
-            const allBwDates = [...new Set([...bwMax.map(e=>e.dateStr), ...bwPipe.map(e=>e.dateStr)])].sort();
-            
-            const bwMaxData = allBwDates.map(d => { const e = bwMax.find(x=>x.dateStr===d); return e ? e.weight : null; });
-            const bwPipeData = allBwDates.map(d => { const e = bwPipe.find(x=>x.dateStr===d); return e ? e.weight : null; });
-
-            const formattedBwDates = allBwDates.map(d => formatAestheticDate(d));
-
-            renderChartInstance('weightChart', formattedBwDates, [
-                {label: 'Max (kg)', data: bwMaxData, color: userColors['Max']},
-                {label: 'Pipe (kg)', data: bwPipeData, color: userColors['Pipe']}
-            ], true);
-
-            // Resumen Textual BW
+            // 1. DATA BW (Soporta N usuarios dinámicamente)
+            let bwDatasets = [];
+            let allBwDatesSet = new Set();
             let summaryHtml = '';
-            if(bwMax.length > 0) {
-                const first = bwMax[0].weight; const last = bwMax[bwMax.length-1].weight; const diff = (last-first).toFixed(1);
-                summaryHtml += `<div class="flex justify-between items-center text-slate-300"><span class="font-semibold" style="color:${userColors['Max']}">Max:</span> <span>Inició: ${first}kg ➔ Actual: ${last}kg <strong class="${diff>=0?'text-emerald-400':'text-red-400'}">(${diff>=0?'+':''}${diff}kg)</strong></span></div>`;
-            }
-            if(bwPipe.length > 0) {
-                const first = bwPipe[0].weight; const last = bwPipe[bwPipe.length-1].weight; const diff = (last-first).toFixed(1);
-                summaryHtml += `<div class="flex justify-between items-center text-slate-300 border-t border-slate-700/50 pt-1 mt-1"><span class="font-semibold" style="color:${userColors['Pipe']}">Pipe:</span> <span>Inició: ${first}kg ➔ Actual: ${last}kg <strong class="${diff>=0?'text-emerald-400':'text-red-400'}">(${diff>=0?'+':''}${diff}kg)</strong></span></div>`;
-            }
+
+            window.appUsers.forEach(u => {
+                const bwData = getMergedBodyWeights(u.id);
+                bwData.forEach(e => allBwDatesSet.add(e.dateStr));
+                
+                if(bwData.length > 0) {
+                    const first = bwData[0].weight; const last = bwData[bwData.length-1].weight; const diff = (last-first).toFixed(1);
+                    summaryHtml += `<div class="flex justify-between items-center text-slate-300 border-b border-slate-700/50 pb-1 mb-1 last:border-0 last:mb-0 last:pb-0"><span class="font-semibold" style="color:${u.color}">${u.name}:</span> <span>Inició: ${first}kg ➔ Actual: ${last}kg <strong class="${diff>=0?'text-emerald-400':'text-red-400'}">(${diff>=0?'+':''}${diff}kg)</strong></span></div>`;
+                }
+            });
             if(!summaryHtml) summaryHtml = '<p class="text-slate-500 italic">No hay registros corporales aún.</p>';
             document.getElementById('bw-summary').innerHTML = summaryHtml;
 
-            // 2. DATA FUERZA SEMANAL
-            const wDataMax = getWeeklyStrengthData('Max');
-            const wDataPipe = getWeeklyStrengthData('Pipe');
+            const allBwDates = Array.from(allBwDatesSet).sort();
+            const formattedBwDates = allBwDates.map(d => formatAestheticDate(d));
+
+            window.appUsers.forEach(u => {
+                const bwHist = getMergedBodyWeights(u.id);
+                const data = allBwDates.map(d => { const e = bwHist.find(x=>x.dateStr===d); return e ? e.weight : null; });
+                bwDatasets.push({ label: `${u.name} (kg)`, data: data, color: u.color });
+            });
+            renderChartInstance('weightChart', formattedBwDates, bwDatasets, true);
+
+            // 2. FUERZA SEMANAL
             const currentRealWeek = getWeekNumber(getLocalISODate());
             const weekLabels = Array.from({length: currentRealWeek}, (_, i) => `Sem ${i+1}`);
-            const alignData = (dataArr) => { let aligned = new Array(currentRealWeek).fill(null); dataArr.forEach((val, i) => { if(i < currentRealWeek) aligned[i] = val; }); return aligned; };
+            let weeklyDatasets = [];
+            
+            window.appUsers.forEach(u => {
+                const wData = getWeeklyStrengthData(u.id);
+                let aligned = new Array(currentRealWeek).fill(null);
+                wData.forEach((val, i) => { if(i < currentRealWeek) aligned[i] = val; });
+                weeklyDatasets.push({ label: `${u.name} (Fuerza)`, data: aligned, color: u.color });
+            });
+            renderChartInstance('weeklyChart', weekLabels, weeklyDatasets, false);
 
-            renderChartInstance('weeklyChart', weekLabels, [
-                {label: 'Max (Fuerza)', data: alignData(wDataMax), color: userColors['Max']},
-                {label: 'Pipe (Fuerza)', data: alignData(wDataPipe), color: userColors['Pipe']}
-            ], false);
-
+            // 3. RADAR
             renderRadarChart();
             
             const sel = document.getElementById('day-progress-select').value;
-            if(sel) window.renderDayProgress(sel);
+            if(sel) renderDayProgress();
         }
 
-        function getWeeklyStrengthData(user) {
+        function getWeeklyStrengthData(userId) {
             let weeklyMap = {};
-            Object.keys(routineData).forEach(dayId => {
-                routineData[dayId].exercises.forEach((ex, index) => {
-                    let hist = getMergedHistory(user, dayId, index);
+            Object.keys(window.routineData).forEach(dayId => {
+                window.routineData[dayId].exercises.forEach((ex, index) => {
+                    let hist = getMergedHistory(userId, dayId, index);
                     hist.forEach(entry => {
                         const w = extractWeightInKg(entry);
                         if (!weeklyMap[entry.week]) weeklyMap[entry.week] = [];
@@ -810,20 +984,21 @@
             const ctx = document.getElementById('radarChart').getContext('2d');
             if(chartInstances['radarChart']) chartInstances['radarChart'].destroy();
 
-            const getMuscleStrength = (user) => {
+            const getMuscleStrength = (userId) => {
                 let mScores = { 'Pecho': 0, 'Espalda': 0, 'Pierna': 0, 'Hombro': 0, 'Brazos': 0, 'Core': 0 };
-                Object.keys(routineData).forEach(dayId => {
-                    routineData[dayId].exercises.forEach((ex, index) => {
-                        let hist = getMergedHistory(user, dayId, index);
+                Object.keys(window.routineData).forEach(dayId => {
+                    window.routineData[dayId].exercises.forEach((ex, index) => {
+                        let hist = getMergedHistory(userId, dayId, index);
                         let maxW = 0;
                         hist.forEach(e => { const w = extractWeightInKg(e); if(w > maxW) maxW = w; });
                         if(maxW > 0) {
                             let cat = 'Core';
-                            if(ex.muscle.includes('Pecho')) cat = 'Pecho';
-                            else if(ex.muscle.includes('Espalda') || ex.muscle.includes('Dorsal') || ex.muscle.includes('Lumbares')) cat = 'Espalda';
-                            else if(ex.muscle.includes('Cuádriceps') || ex.muscle.includes('Glúteo') || ex.muscle.includes('Isquios') || ex.muscle.includes('Gemelos') || ex.muscle.includes('Sóleo')) cat = 'Pierna';
-                            else if(ex.muscle.includes('Hombro') || ex.muscle.includes('Deltoides')) cat = 'Hombro';
-                            else if(ex.muscle.includes('Bíceps') || ex.muscle.includes('Tríceps') || ex.muscle.includes('Antebrazos')) cat = 'Brazos';
+                            const m = ex.muscle.toLowerCase();
+                            if(m.includes('pecho')) cat = 'Pecho';
+                            else if(m.includes('espalda') || m.includes('dorsal') || m.includes('lumbar')) cat = 'Espalda';
+                            else if(m.includes('pierna') || m.includes('cuádriceps') || m.includes('glúteo') || m.includes('isquio') || m.includes('gemelo') || m.includes('sóleo')) cat = 'Pierna';
+                            else if(m.includes('hombro') || m.includes('deltoide')) cat = 'Hombro';
+                            else if(m.includes('brazos') || m.includes('bíceps') || m.includes('tríceps') || m.includes('antebrazo')) cat = 'Brazos';
                             mScores[cat] += maxW;
                         }
                     });
@@ -831,15 +1006,14 @@
                 return Object.values(mScores);
             };
 
+            let datasets = [];
+            window.appUsers.forEach(u => {
+                datasets.push({ label: u.name, data: getMuscleStrength(u.id), backgroundColor: u.color + '30', borderColor: u.color, borderWidth: 2, pointRadius: 3 });
+            });
+
             chartInstances['radarChart'] = new Chart(ctx, {
                 type: 'radar',
-                data: {
-                    labels: ['Pecho', 'Espalda', 'Pierna', 'Hombro', 'Brazos', 'Core'],
-                    datasets: [
-                        { label: 'Max', data: getMuscleStrength('Max'), backgroundColor: userColors['Max'] + '30', borderColor: userColors['Max'], borderWidth: 2, pointRadius: 3 },
-                        { label: 'Pipe', data: getMuscleStrength('Pipe'), backgroundColor: userColors['Pipe'] + '30', borderColor: userColors['Pipe'], borderWidth: 2, pointRadius: 3 }
-                    ]
-                },
+                data: { labels: ['Pecho', 'Espalda', 'Pierna', 'Hombro', 'Brazos', 'Core'], datasets: datasets },
                 options: { responsive: true, maintainAspectRatio: false, scales: { r: { grid: { color: '#334155' }, angleLines: { color: '#334155' }, ticks: { display: false } } } }
             });
         }
@@ -864,56 +1038,345 @@
             });
         }
 
-        window.renderDayProgress = function(dayId) {
+        window.clearHistoryFilter = function() {
+            document.getElementById('history-date-filter').value = '';
+            document.getElementById('display-history-date').textContent = 'Filtrar fecha...';
+            renderDayProgress();
+        }
+
+        window.renderDayProgress = function() {
+            const dayId = document.getElementById('day-progress-select').value;
             const container = document.getElementById('day-progress-list');
-            if(!dayId) return;
-            const exercises = routineData[dayId].exercises;
-            let allDates = new Set();
+            const filterDate = document.getElementById('history-date-filter').value;
+            
+            if(filterDate) document.getElementById('display-history-date').textContent = formatAestheticDate(filterDate);
+            else document.getElementById('display-history-date').textContent = 'Filtrar fecha...';
+
+            if(!dayId) { container.innerHTML = ''; return; }
+            
+            const exercises = window.routineData[dayId].exercises;
+            let allDatesSet = new Set();
 
             exercises.forEach((ex, index) => {
-                getMergedHistory('Max', dayId, index).forEach(e => allDates.add(e.dateStr));
-                getMergedHistory('Pipe', dayId, index).forEach(e => allDates.add(e.dateStr));
+                window.appUsers.forEach(u => {
+                    getMergedHistory(u.id, dayId, index).forEach(e => allDatesSet.add(e.dateStr));
+                });
             });
 
-            const sortedDates = Array.from(allDates).sort().reverse();
-            if(sortedDates.length === 0) { container.innerHTML = `<div class="bg-slate-800/40 p-6 rounded-xl text-center border border-slate-700 mt-2"><p class="text-slate-400 text-sm">Sin registros.</p></div>`; return; }
+            let sortedDates = Array.from(allDatesSet).sort().reverse();
+            if(filterDate) sortedDates = sortedDates.filter(d => d === filterDate); // Aplicar filtro
+
+            if(sortedDates.length === 0) { container.innerHTML = `<div class="bg-slate-800/40 p-6 rounded-xl text-center border border-slate-700 mt-2"><p class="text-slate-400 text-sm">Sin registros para esta búsqueda.</p></div>`; return; }
 
             let htmlStr = '';
             sortedDates.forEach(dateStr => {
                 const weekNum = getWeekNumber(dateStr);
                 const displayDate = formatAestheticDate(dateStr);
-                htmlStr += `<div class="bg-slate-800/40 border border-slate-700/80 rounded-xl overflow-hidden mt-2"><div class="bg-slate-800 px-3 py-2 border-b border-slate-700 flex justify-between items-center"><h4 class="font-bold text-slate-200 text-sm">📅 ${displayDate} <span class="text-slate-400 font-normal text-xs ml-2">(Sem ${weekNum})</span></h4></div><div class="p-3 divide-y divide-slate-700/50">`;
+                htmlStr += `<div class="bg-slate-800/40 border border-slate-700/80 rounded-xl overflow-hidden mt-2"><div class="bg-slate-800 px-4 py-2 border-b border-slate-700 flex justify-between items-center"><h4 class="font-bold text-slate-200 text-sm">📅 ${displayDate} <span class="text-slate-400 font-normal text-xs ml-2">(Sem ${weekNum})</span></h4></div><div class="p-3 divide-y divide-slate-700/50">`;
 
-                // Aquí mostramos los 5 ejercicios SIEMPRE
+                // Renderizar los N ejercicios
                 exercises.forEach((ex, index) => {
-                    let mHist = getMergedHistory('Max', dayId, index);
-                    let pHist = getMergedHistory('Pipe', dayId, index);
-                    const mEntry = mHist.find(e => e.dateStr === dateStr); 
-                    const pEntry = pHist.find(e => e.dateStr === dateStr);
+                    htmlStr += `<div class="py-3 flex flex-col md:flex-row md:items-center justify-between gap-2 text-xs">
+                        <span class="text-slate-300 font-medium md:w-1/3">${index + 1}. ${ex.name}</span>
+                        <div class="flex-1 flex flex-wrap justify-end gap-2">`;
+                    
+                    window.appUsers.forEach(u => {
+                        let uHist = getMergedHistory(u.id, dayId, index);
+                        const uEntry = uHist.find(e => e.dateStr === dateStr);
+                        
+                        const calcDiff = (hist, curr) => {
+                            if(!curr) return '';
+                            const past = hist.filter(e => e.dateStr < dateStr);
+                            if(past.length===0) return '';
+                            const diff = extractWeightInKg(curr) - extractWeightInKg(past[past.length-1]);
+                            if(diff>0) return `<span class="text-emerald-400 text-[10px] ml-1">▲+${diff.toFixed(1)}</span>`;
+                            if(diff<0) return `<span class="text-red-400 text-[10px] ml-1">▼${diff.toFixed(1)}</span>`;
+                            return `<span class="text-slate-500 text-[10px] ml-1">=</span>`;
+                        };
 
-                    const calcDiff = (hist, curr) => {
-                        if(!curr) return '';
-                        const past = hist.filter(e => e.dateStr < dateStr);
-                        if(past.length===0) return '';
-                        const diff = extractWeightInKg(curr) - extractWeightInKg(past[past.length-1]);
-                        if(diff>0) return `<span class="text-emerald-400 text-[10px] ml-1">▲+${diff.toFixed(1)}</span>`;
-                        if(diff<0) return `<span class="text-red-400 text-[10px] ml-1">▼${diff.toFixed(1)}</span>`;
-                        return `<span class="text-slate-500 text-[10px] ml-1">=</span>`;
-                    };
-
-                    const mWeight = mEntry ? `<span class="font-bold" style="color:${userColors['Max']}">${mEntry.weight}${mEntry.unit}</span>${calcDiff(mHist, mEntry)}` : '<span class="text-slate-600">--</span>';
-                    const pWeight = pEntry ? `<span class="font-bold" style="color:${userColors['Pipe']}">${pEntry.weight}${pEntry.unit}</span>${calcDiff(pHist, pEntry)}` : '<span class="text-slate-600">--</span>';
-
-                    htmlStr += `<div class="py-2 flex justify-between items-center text-xs"><span class="text-slate-300 font-medium truncate w-1/2 pr-2">${index + 1}. ${ex.name}</span><div class="w-1/2 flex justify-end gap-2 text-right"><div class="w-1/2 bg-slate-900/50 rounded px-1 py-1 border border-slate-700"><span class="block text-[8px] uppercase" style="color:${userColors['Max']}">Max</span>${mWeight}</div><div class="w-1/2 bg-slate-900/50 rounded px-1 py-1 border border-slate-700"><span class="block text-[8px] uppercase" style="color:${userColors['Pipe']}">Pipe</span>${pWeight}</div></div></div>`;
+                        const uWeight = uEntry ? `<span class="font-bold text-sm" style="color:${u.color}">${uEntry.weight}${uEntry.unit}</span>${calcDiff(uHist, uEntry)}` : '<span class="text-slate-600">--</span>';
+                        
+                        htmlStr += `<div class="bg-slate-900/50 rounded-lg px-2 py-1.5 border border-slate-700 min-w-[80px] text-center">
+                            <span class="block text-[9px] uppercase font-bold mb-0.5" style="color:${u.color}">${u.name}</span>${uWeight}
+                        </div>`;
+                    });
+                    
+                    htmlStr += `</div></div>`;
                 });
                 htmlStr += `</div></div>`;
             });
             container.innerHTML = htmlStr;
         }
 
+        window.loadDayForEdit = function() {
+            const dayId = document.getElementById('edit-day-select').value;
+            const data = window.routineData[dayId];
+            if(!data) return;
+            
+            document.getElementById('day-edit-form').classList.remove('hidden');
+            document.getElementById('edit-day-title').value = data.title;
+            document.getElementById('edit-day-focus').value = data.focus;
+            
+            renderEditExercisesList(dayId);
+        }
+
+        window.saveDayDetails = function() {
+            const dayId = document.getElementById('edit-day-select').value;
+            window.routineData[dayId].title = document.getElementById('edit-day-title').value;
+            window.routineData[dayId].focus = document.getElementById('edit-day-focus').value;
+            syncConfigToCloud();
+            showToast("Encabezado de día guardado.");
+        }
+
+        function renderEditExercisesList(dayId) {
+            const container = document.getElementById('edit-exercises-list');
+            container.innerHTML = '';
+            window.routineData[dayId].exercises.forEach((ex, idx) => {
+                const div = document.createElement('div');
+                div.className = "bg-slate-800 border border-slate-700 rounded-lg p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3";
+                div.innerHTML = `
+                    <div class="flex-1">
+                        <span class="text-white font-bold text-sm block">${idx+1}. ${ex.name}</span>
+                        <span class="text-xs text-slate-400 block">${ex.muscle} • ${ex.sets}x${ex.reps}</span>
+                    </div>
+                    <div class="flex gap-1 self-end sm:self-auto">
+                        <button onclick="moveExercise('${dayId}', ${idx}, -1)" class="p-1.5 bg-slate-700 hover:bg-slate-600 rounded text-white disabled:opacity-50" ${idx===0?'disabled':''}>↑</button>
+                        <button onclick="moveExercise('${dayId}', ${idx}, 1)" class="p-1.5 bg-slate-700 hover:bg-slate-600 rounded text-white disabled:opacity-50" ${idx===window.routineData[dayId].exercises.length-1?'disabled':''}>↓</button>
+                        <button onclick="openExerciseEditor(${idx}, false)" class="p-1.5 bg-blue-600 hover:bg-blue-500 rounded text-white mx-1">✎</button>
+                        <button onclick="deleteExercise('${dayId}', ${idx})" class="p-1.5 bg-red-600 hover:bg-red-500 rounded text-white">🗑</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        window.moveExercise = function(dayId, idx, direction) {
+            const arr = window.routineData[dayId].exercises;
+            if(idx + direction < 0 || idx + direction >= arr.length) return;
+            const temp = arr[idx];
+            arr[idx] = arr[idx + direction];
+            arr[idx + direction] = temp;
+            syncConfigToCloud();
+            renderEditExercisesList(dayId);
+        }
+
+        window.deleteExercise = function(dayId, idx) {
+            if(confirm("¿Seguro que quieres eliminar este ejercicio? Se perderá el enlace visual a su historial.")) {
+                window.routineData[dayId].exercises.splice(idx, 1);
+                syncConfigToCloud();
+                renderEditExercisesList(dayId);
+            }
+        }
+
+        window.openExerciseEditor = function(index = null, isNew = false) {
+            const dayId = document.getElementById('edit-day-select').value;
+            document.getElementById('editor-is-new').value = isNew ? 'true' : 'false';
+            document.getElementById('editor-ex-index').value = index !== null ? index : '';
+            
+            if(isNew) {
+                document.getElementById('editor-modal-title').textContent = "Nuevo Ejercicio";
+                document.getElementById('editor-name').value = '';
+                document.getElementById('editor-muscle').value = '';
+                document.getElementById('editor-equipment').value = '';
+                document.getElementById('editor-sets').value = '3';
+                document.getElementById('editor-reps').value = '10-12';
+                document.getElementById('editor-rest').value = '90';
+            } else {
+                document.getElementById('editor-modal-title').textContent = "Editar Ejercicio";
+                const ex = window.routineData[dayId].exercises[index];
+                document.getElementById('editor-name').value = ex.name;
+                document.getElementById('editor-muscle').value = ex.muscle;
+                document.getElementById('editor-equipment').value = ex.equipment;
+                document.getElementById('editor-sets').value = ex.sets;
+                document.getElementById('editor-reps').value = ex.reps;
+                document.getElementById('editor-rest').value = ex.restTime;
+            }
+            document.getElementById('library-modal').classList.add('hidden'); // Cerrar biblioteca si estaba abierta
+            document.getElementById('exercise-editor-modal').classList.remove('hidden');
+        }
+
+        window.saveExerciseEdit = function() {
+            const dayId = document.getElementById('edit-day-select').value;
+            const isNew = document.getElementById('editor-is-new').value === 'true';
+            const index = document.getElementById('editor-ex-index').value;
+            
+            const exObj = {
+                name: document.getElementById('editor-name').value,
+                muscle: document.getElementById('editor-muscle').value,
+                equipment: document.getElementById('editor-equipment').value,
+                sets: document.getElementById('editor-sets').value,
+                reps: document.getElementById('editor-reps').value,
+                restTime: parseInt(document.getElementById('editor-rest').value) || 90
+            };
+
+            if(isNew) {
+                window.routineData[dayId].exercises.push(exObj);
+            } else {
+                window.routineData[dayId].exercises[index] = exObj;
+            }
+            
+            syncConfigToCloud();
+            closeModal('exercise-editor-modal');
+            renderEditExercisesList(dayId);
+            showToast(isNew ? "Ejercicio añadido" : "Ejercicio actualizado");
+        }
+
+        // Biblioteca Básica Inicial (Opcional, pre-cargada de lo existente)
+        window.openExerciseLibrary = function() {
+            document.getElementById('library-modal').classList.remove('hidden');
+            renderLibrary();
+        }
+
+        window.renderLibrary = function() {
+            const filter = document.getElementById('library-filter').value.toLowerCase();
+            const container = document.getElementById('library-list');
+            container.innerHTML = '';
+            
+            // Recopilar ejercicios únicos de la rutina base
+            let lib = new Map();
+            Object.values(window.routineData).forEach(day => {
+                day.exercises.forEach(ex => lib.set(ex.name, ex));
+            });
+            
+            Array.from(lib.values()).forEach(ex => {
+                if(filter === 'todos' || ex.muscle.toLowerCase().includes(filter)) {
+                    const div = document.createElement('div');
+                    div.className = "bg-slate-800 p-3 rounded-lg flex justify-between items-center";
+                    div.innerHTML = `
+                        <div>
+                            <p class="text-white text-sm font-bold">${ex.name}</p>
+                            <p class="text-xs text-slate-400">${ex.muscle} • ${ex.equipment}</p>
+                        </div>
+                        <button class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded text-xs font-bold" onclick="addFromLibrary('${ex.name}')">Agregar</button>
+                    `;
+                    container.appendChild(div);
+                }
+            });
+            window.tempLib = lib; // Guardar temporal para la función de agregar
+        }
+
+        window.addFromLibrary = function(name) {
+            const ex = window.tempLib.get(name);
+            if(ex) {
+                const dayId = document.getElementById('edit-day-select').value;
+                window.routineData[dayId].exercises.push({...ex}); // Clonar
+                syncConfigToCloud();
+                closeModal('library-modal');
+                renderEditExercisesList(dayId);
+                showToast("Añadido desde biblioteca");
+            }
+        }
+
+        window.renderProfilesManager = function() {
+            const container = document.getElementById('profiles-list');
+            container.innerHTML = '';
+            window.appUsers.forEach(u => {
+                const div = document.createElement('div');
+                div.className = "bg-slate-800 border border-slate-700 rounded-lg p-3 flex justify-between items-center";
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-4 h-4 rounded-full" style="background-color: ${u.color}"></div>
+                        <span class="text-white font-bold">${u.name}</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="editProfile('${u.id}')" class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded">Editar</button>
+                        ${window.appUsers.length > 1 ? `<button onclick="deleteProfile('${u.id}')" class="text-xs bg-red-600 hover:bg-red-500 text-white px-2 py-1 rounded">Borrar</button>` : ''}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        window.editProfile = function(id) {
+            const u = window.appUsers.find(x => x.id === id);
+            if(u) {
+                document.getElementById('profile-form-title').textContent = "Editar Perfil";
+                document.getElementById('edit-profile-id').value = u.id;
+                document.getElementById('profile-name').value = u.name;
+                document.getElementById('profile-color-picker').value = u.color;
+                document.getElementById('profile-color-hex').value = u.color;
+            }
+        }
+
+        window.deleteProfile = function(id) {
+            if(confirm("¿Borrar este perfil? (Sus datos históricos quedarán huérfanos)")) {
+                window.appUsers = window.appUsers.filter(x => x.id !== id);
+                if(window.currentUser === id) window.currentUser = window.appUsers[0].id;
+                syncConfigToCloud();
+                renderProfilesManager();
+                renderUserTabs();
+            }
+        }
+
+        window.resetProfileForm = function() {
+            document.getElementById('profile-form-title').textContent = "Crear Nuevo Perfil";
+            document.getElementById('edit-profile-id').value = '';
+            document.getElementById('profile-name').value = '';
+            document.getElementById('profile-color-picker').value = '#000000';
+            document.getElementById('profile-color-hex').value = '';
+        }
+
+        window.saveProfile = function() {
+            const editId = document.getElementById('edit-profile-id').value;
+            const name = document.getElementById('profile-name').value.trim();
+            const color = document.getElementById('profile-color-hex').value.trim() || document.getElementById('profile-color-picker').value;
+            
+            if(!name) return showToast("El nombre es obligatorio", "error");
+
+            if(editId) {
+                const idx = window.appUsers.findIndex(x => x.id === editId);
+                if(idx >= 0) { window.appUsers[idx].name = name; window.appUsers[idx].color = color; }
+            } else {
+                const newId = name.replace(/\s+/g, '') + Date.now();
+                window.appUsers.push({ id: newId, name: name, color: color });
+            }
+            
+            syncConfigToCloud();
+            resetProfileForm();
+            renderProfilesManager();
+            renderUserTabs();
+            applyTheme(window.currentUser);
+            showToast("Perfil guardado");
+        }
+
+        // Sincronizar inputs de color
+        document.getElementById('profile-color-picker').addEventListener('input', (e) => { document.getElementById('profile-color-hex').value = e.target.value; });
+        document.getElementById('profile-color-hex').addEventListener('input', (e) => { if(e.target.value.startsWith('#')) document.getElementById('profile-color-picker').value = e.target.value; });
+
+
+        window.closeModal = function(id) { document.getElementById(id).classList.add('hidden'); }
+        
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type === 'error' ? 'error' : ''}`;
+            toast.innerHTML = message;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.animation = 'fadeOut 0.3s ease forwards'; setTimeout(() => toast.remove(), 300); }, 1500);
+        }
+
+        window.startTimer = function(seconds) {
+            clearInterval(timerInterval);
+            let timeLeft = seconds; showToast(`⏱ Descanso: ${timeLeft}s`);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft <= 0) { 
+                    clearInterval(timerInterval); 
+                    showToast('🔥 ¡A LA SERIE!'); 
+                    try {
+                        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                        const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                        osc.connect(gain); gain.connect(ctx.destination);
+                        osc.type = 'sine'; osc.frequency.setValueAtTime(800, ctx.currentTime);
+                        gain.gain.setValueAtTime(0.1, ctx.currentTime); osc.start(); osc.stop(ctx.currentTime + 0.3);
+                    } catch(e) {}
+                }
+            }, 1000);
+        }
+
         window.exportData = function() {
             try {
-                let dataToExport = {};
+                let dataToExport = { __config: { users: window.appUsers, routine: window.routineData } };
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
                     if (key.startsWith(`tf_pro_`)) dataToExport[key] = localStorage.getItem(key);
@@ -921,20 +1384,25 @@
                 const encodedData = btoa(encodeURIComponent(JSON.stringify(dataToExport)));
                 const tempInput = document.createElement("input"); tempInput.value = encodedData; document.body.appendChild(tempInput);
                 tempInput.select(); document.execCommand("copy"); document.body.removeChild(tempInput);
-                showToast("✅ Datos locales copiados. Pégalos en el otro dispositivo.");
+                showToast("✅ Respaldo copiado al portapapeles");
             } catch (err) { showToast("Error al exportar", "error"); }
         }
 
         window.importData = async function() {
             const inputField = document.getElementById('import-code');
             const code = inputField.value.trim();
-            if(!code) { showToast("Pega el código primero", "error"); return; }
-            
+            if(!code) return;
             try {
                 const decodedStr = decodeURIComponent(atob(code));
                 const dataToImport = JSON.parse(decodedStr);
                 
-                showToast("Integrando y subiendo a la nube...", "success");
+                showToast("Integrando datos...", "success");
+
+                if(dataToImport.__config) {
+                    window.appUsers = dataToImport.__config.users || window.appUsers;
+                    window.routineData = dataToImport.__config.routine || window.routineData;
+                    syncConfigToCloud();
+                }
                 
                 for (const key in dataToImport) {
                     if(key.startsWith('tf_pro_')) {
@@ -945,36 +1413,30 @@
                             localData.forEach(e => mergedMap.set(e.dateStr, e));
                             importedData.forEach(e => mergedMap.set(e.dateStr, e));
                             const mergedArray = Array.from(mergedMap.values()).sort((a,b)=>a.timestamp - b.timestamp);
-                            
                             localStorage.setItem(key, JSON.stringify(mergedArray));
 
-                            // SUBIMOS A LA NUBE (MIGRACIÓN MAGISTRAL)
+                            // SUBIR A FIREBASE MASIVAMENTE
                             if (isCloudActive && auth?.currentUser) {
                                 for (const entry of mergedArray) {
                                     if (key.includes('_hist_')) {
                                         const parts = key.split('_');
                                         const user = parts[3]; const dayId = parts[4]; const index = parseInt(parts[5]);
                                         const existing = globalExerciseHistory.find(e => e.user === user && e.dayId === dayId && e.exerciseIndex === index && e.dateStr === entry.dateStr);
-                                        if(!existing) {
-                                            const dataObj = { user, dayId, exerciseIndex: index, dateStr: entry.dateStr, weight: entry.weight, unit: entry.unit || 'kg', timestamp: entry.timestamp, week: entry.week };
-                                            await addDoc(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'exerciseHistory'), dataObj);
-                                        }
+                                        if(!existing) await addDoc(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'exerciseHistory'), { user, dayId, exerciseIndex: index, dateStr: entry.dateStr, weight: entry.weight, unit: entry.unit || 'kg', timestamp: entry.timestamp, week: entry.week });
                                     } else if (key.includes('_bw_')) {
                                         const user = key.split('_')[3];
                                         const existing = globalBodyWeights.find(e => e.user === user && e.dateStr === entry.dateStr);
-                                        if(!existing) {
-                                            const dataObj = { user, dateStr: entry.dateStr, weight: entry.weight, timestamp: entry.timestamp };
-                                            await addDoc(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'bodyWeights'), dataObj);
-                                        }
+                                        if(!existing) await addDoc(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'bodyWeights'), { user, dateStr: entry.dateStr, weight: entry.weight, timestamp: entry.timestamp });
                                     }
                                 }
                             }
                         } else localStorage.setItem(key, dataToImport[key]);
                     }
                 }
-                inputField.value = ""; showToast(`✅ Migración exitosa. Gráficas actualizadas.`); updateCharts(); 
-                if(window.currentDay !== 'progreso') renderExercises(window.currentDay);
-            } catch (err) { showToast("Código inválido", "error"); }
+                inputField.value = ""; showToast(`✅ Importación y Nube Sincronizada`); updateCharts(); 
+                renderUserTabs(); renderTabs();
+                if(!window.currentDay.includes('manager')) switchView(window.currentDay);
+            } catch (err) { showToast("Código inválido", "error"); console.error(err); }
         }
 
         window.onload = () => {
