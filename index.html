@@ -36,11 +36,11 @@
         }
 
         body[data-user="Pipe"] {
-            /* Perfil Pipe (Rojo Carmesí Intenso y Contrastante) */
-            --theme-400: 244 63 94; 
-            --theme-500: 225 29 72;   
-            --theme-600: 190 18 60;   
-            --theme-900: 136 19 55;   
+            /* Perfil Pipe (Rojo Puro/Carmesí Brillante - Alto Contraste) */
+            --theme-400: 248 113 113; 
+            --theme-500: 239 68 68;   
+            --theme-600: 220 38 38;   
+            --theme-900: 153 27 27;   
         }
 
         body {
@@ -73,8 +73,6 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
-
         /* ELIMINAR FLECHAS DE LOS INPUTS NUMBER */
         input[type="number"]::-webkit-inner-spin-button, 
         input[type="number"]::-webkit-outer-spin-button { 
@@ -97,7 +95,7 @@
         @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeOut { to { opacity: 0; transform: translateY(-20px); } }
 
-        /* Efecto visual al guardar */
+        /* Animación para el botón de guardado */
         @keyframes savedPulse {
             0% { transform: scale(1); background-color: #10b981; }
             50% { transform: scale(1.05); background-color: #059669; }
@@ -107,11 +105,13 @@
             animation: savedPulse 0.4s ease-out;
             background-color: #10b981 !important;
             color: white !important;
+            border-color: #10b981 !important;
         }
     </style>
 </head>
 <body data-user="Max" class="h-screen flex flex-col md:flex-row overflow-hidden">
 
+    <!-- BARRA LATERAL -->
     <nav class="w-full md:w-64 lg:w-72 glass-card p-4 flex flex-col z-20 shadow-2xl flex-shrink-0 border-r border-slate-800">
         <div class="mb-5 flex flex-row md:flex-col items-center md:items-start justify-between gap-4">
             <div>
@@ -130,10 +130,12 @@
         <div class="flex md:flex-col gap-2 overflow-x-auto no-scrollbar pb-2 md:pb-0" id="tabs-container"></div>
     </nav>
 
+    <!-- ÁREA PRINCIPAL -->
     <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-[#0b1121]">
         
+        <!-- HEADER GLOBAL (Saludo y Status Nube) -->
         <div class="max-w-[1400px] mx-auto mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <h2 id="dynamic-greeting" class="text-lg md:text-xl font-bold text-slate-300">Buenos días, Max</h2>
+            <h2 id="dynamic-greeting" class="text-lg md:text-xl font-bold text-slate-300">Buenos días, Max 💪</h2>
             
             <div id="sync-indicator" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 shadow-sm transition-colors">
                 <div id="sync-dot" class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
@@ -149,15 +151,21 @@
                     <p id="current-day-focus" class="text-sm text-theme-400 font-medium transition-colors">Enfoque: ...</p>
                 </div>
                 
-                <div class="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700 shadow-inner flex items-center gap-3 w-full md:w-auto">
+                <!-- Selector de Fecha Estilizado -->
+                <div class="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700 shadow-inner flex items-center gap-3 w-full md:w-auto relative overflow-hidden group cursor-pointer hover:bg-slate-800 transition-colors">
                     <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">🗓 Fecha:</span>
-                    <input type="date" id="training-date" onchange="renderExercises(currentDay)" class="bg-slate-900 border border-theme-500/50 rounded-lg px-3 py-1.5 text-white text-sm focus:border-theme-500 outline-none flex-1 md:w-auto cursor-pointer transition-colors">
+                    <span id="display-training-date" class="text-white font-bold text-sm tracking-wide group-hover:text-theme-400 transition-colors">06/Oct./2026</span>
+                    <!-- Input invisible sobrepuesto -->
+                    <input type="date" id="training-date" onchange="updateGlobalDate()" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10">
+                    <span class="text-slate-500 text-xs pointer-events-none">▼</span>
                 </div>
             </header>
 
-            <div id="exercises-container" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5"></div>
+            <!-- Contenedor adaptativo indestructible -->
+            <div id="exercises-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"></div>
         </div>
 
+        <!-- VISTA: AVANCES -->
         <div id="progress-view" class="hidden max-w-[1400px] mx-auto flex flex-col gap-6">
             <header class="mb-2">
                 <h3 class="text-2xl md:text-3xl font-bold text-white mb-1 tracking-tight">Centro de Avances</h3>
@@ -172,13 +180,21 @@
                         <div id="bw-summary" class="flex flex-col gap-1 text-sm bg-slate-900/50 p-3 rounded-lg border border-slate-800"></div>
                     </div>
                     
-                    <div class="flex items-center gap-2 w-full lg:w-auto bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
-                        <input type="date" id="bw-date" class="bg-slate-800 border border-slate-700 rounded-lg px-2 py-2 text-white text-sm focus:border-theme-500 outline-none flex-1 md:w-auto">
-                        <div class="relative flex items-center">
-                            <input type="number" step="0.1" inputmode="decimal" id="bw-weight" placeholder="Ej. 65.5" class="bg-slate-800 border border-slate-700 rounded-lg pl-3 pr-8 py-2 text-white text-sm focus:border-theme-500 outline-none w-24">
-                            <span class="absolute right-3 text-xs text-slate-400 font-bold pointer-events-none">kg</span>
+                    <div class="flex flex-col sm:flex-row items-center gap-2 w-full lg:w-auto bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
+                        <!-- Fecha BW estilizada -->
+                        <div class="relative flex items-center justify-between bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 w-full sm:w-auto group hover:border-slate-500 transition-colors">
+                            <span id="display-bw-date" class="text-white text-sm tracking-wide group-hover:text-theme-400 transition-colors">06/Oct./2026</span>
+                            <span class="text-slate-500 text-xs ml-3 pointer-events-none">📅</span>
+                            <input type="date" id="bw-date" onchange="updateBwDate()" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10">
                         </div>
-                        <button id="btn-save-bw" onclick="saveBodyWeight()" class="bg-theme-600 hover:bg-theme-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 shadow-lg shadow-theme-500/20">Guardar</button>
+                        
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <div class="relative flex items-center flex-1">
+                                <input type="number" step="0.1" inputmode="decimal" id="bw-weight" placeholder="Ej. 65.5" class="bg-slate-800 border border-slate-700 rounded-lg pl-3 pr-8 py-2 text-white text-sm focus:border-theme-500 outline-none w-full sm:w-24">
+                                <span class="absolute right-3 text-xs text-slate-400 font-bold pointer-events-none">kg</span>
+                            </div>
+                            <button id="btn-save-bw" onclick="saveBodyWeight()" class="bg-theme-600 hover:bg-theme-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 shadow-lg shadow-theme-500/20 active:scale-95">Guardar</button>
+                        </div>
                     </div>
                 </div>
                 
@@ -207,7 +223,7 @@
                 </div>
                 
                 <!-- HISTORIAL DÍA A DÍA -->
-                <div class="glass-card p-5 md:p-6 rounded-2xl border-l-4 border-l-theme-500 transition-colors flex flex-col max-h-[450px] lg:col-span-2">
+                <div class="glass-card p-5 md:p-6 rounded-2xl border-l-4 border-l-theme-500 transition-colors flex flex-col max-h-[500px] lg:col-span-2">
                     <h4 class="text-white font-bold text-lg mb-1">Historial por Rutina (Día a Día)</h4>
                     <p class="text-xs text-slate-400 mb-4">Compara el rendimiento exacto sesión tras sesión.</p>
                     
@@ -224,17 +240,18 @@
                 </div>
             </div>
             
+            <!-- SINCRONIZACIÓN -->
             <div class="glass-card p-5 md:p-6 rounded-2xl mt-2 bg-gradient-to-r from-slate-900 to-slate-800 border border-theme-900/30">
-                <h4 class="text-lg font-bold text-white mb-2">Sincronizar Datos (Importar/Exportar)</h4>
-                <p class="text-xs text-slate-400 mb-4">Usa esto para traer tus datos viejos o para enviarle tu progreso a Pipe por WhatsApp si falla el internet.</p>
+                <h4 class="text-lg font-bold text-white mb-2">Sincronización (Migración)</h4>
+                <p class="text-xs text-slate-400 mb-4">Pega aquí tu código antiguo. Al integrarlo, se subirá automáticamente a la Nube (Firebase) para ambos.</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/50">
-                        <button onclick="exportData()" class="w-full bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-lg text-sm font-bold transition-colors shadow-lg">📋 Copiar mis datos</button>
+                        <button onclick="exportData()" class="w-full bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-lg text-sm font-bold transition-colors shadow-lg">📋 Copiar mis datos locales</button>
                     </div>
                     <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/50">
                         <div class="flex gap-2">
                             <input type="text" id="import-code" placeholder="Pega el código aquí..." class="flex-1 w-0 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-theme-500">
-                            <button onclick="importData()" class="bg-theme-600 hover:bg-theme-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">Integrar</button>
+                            <button onclick="importData()" class="bg-theme-600 hover:bg-theme-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">Integrar y Subir</button>
                         </div>
                     </div>
                 </div>
@@ -314,8 +331,8 @@
         let timerInterval;
         let chartInstances = {};
         
-        // Colores de la app (Naranja vs Carmesí Intenso)
-        const userColors = { 'Max': '#f97316', 'Pipe': '#e11d48' };
+        // Colores de la app (Naranja vs Carmesí Intenso y brillante)
+        const userColors = { 'Max': '#f97316', 'Pipe': '#ef4444' };
         
         let isCloudActive = false;
         let globalExerciseHistory = [];
@@ -323,6 +340,7 @@
         let app, db, auth;
         let hasAutoSelectedDay = false;
 
+        // TUS CREDENCIALES EXACTAS
         const firebaseConfig = {
             apiKey: "AIzaSyDo8bDMUCkWWa13S1wlia-rO4UF0c4mNBo",
             authDomain: "trackfit-database-83ab5.firebaseapp.com",
@@ -332,6 +350,37 @@
             appId: "1:233927465610:web:f8569dad5596ca2c356b73"
         };
         const collectionAppId = "trackfit-pro-v2";
+
+        // MÉTODOS DE FECHA Y SALUDO
+        function getLocalISODate() {
+            const tzOffset = (new Date()).getTimezoneOffset() * 60000;
+            return (new Date(Date.now() - tzOffset)).toISOString().slice(0, 10);
+        }
+
+        // Formato estricto: "06/Oct./2026"
+        function formatAestheticDate(isoDate) {
+            if(!isoDate) return '';
+            const [y, m, d] = isoDate.split('-');
+            const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            return `${d}/${months[parseInt(m, 10)-1]}./${y}`;
+        }
+
+        window.updateGlobalDate = function() {
+            const rawDate = document.getElementById('training-date').value;
+            document.getElementById('display-training-date').textContent = formatAestheticDate(rawDate);
+            if (window.currentDay !== 'progreso') renderExercises(window.currentDay);
+        }
+
+        window.updateBwDate = function() {
+            const rawDate = document.getElementById('bw-date').value;
+            document.getElementById('display-bw-date').textContent = formatAestheticDate(rawDate);
+        }
+
+        function updateGreeting() {
+            const hour = new Date().getHours();
+            let timeGreeting = hour < 12 ? 'Buenos días' : (hour < 19 ? 'Buenas tardes' : 'Buenas noches');
+            document.getElementById('dynamic-greeting').textContent = `${timeGreeting}, ${window.currentUser} 💪`;
+        }
 
         function updateSyncStatus(status) {
             const dot = document.getElementById('sync-dot');
@@ -358,7 +407,7 @@
                 await signInAnonymously(auth);
                 setupRealtimeListeners();
             } catch (error) {
-                console.warn("Firebase Auth falló, usando LocalStorage. Asegúrate de habilitar Anónimo en Auth y agregar github.io a Dominios Autorizados.", error);
+                console.warn("Firebase Auth falló, usando LocalStorage.", error);
                 updateSyncStatus('error');
                 autoSelectDay();
             }
@@ -373,7 +422,7 @@
                     updateSyncStatus('success');
                     if (window.currentDay === 'progreso') renderProgress(); else renderExercises(window.currentDay);
                 },
-                (error) => { console.warn("Error Firestore (Reglas):", error); updateSyncStatus('error'); }
+                (error) => { console.warn("Error Firestore:", error); updateSyncStatus('error'); }
             );
 
             onSnapshot(collection(db, 'artifacts', collectionAppId, 'public', 'data', 'bodyWeights'), 
@@ -387,24 +436,6 @@
             autoSelectDay();
         }
 
-        function getLocalISODate() {
-            const tzOffset = (new Date()).getTimezoneOffset() * 60000;
-            return (new Date(Date.now() - tzOffset)).toISOString().slice(0, 10);
-        }
-
-        function formatAestheticDate(isoDate) {
-            if(!isoDate) return '';
-            const [y, m, d] = isoDate.split('-');
-            const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-            return `${d}/${months[parseInt(m)-1]}/${y}`;
-        }
-
-        function updateGreeting() {
-            const hour = new Date().getHours();
-            let timeGreeting = hour < 12 ? 'Buenos días' : (hour < 19 ? 'Buenas tardes' : 'Buenas noches');
-            document.getElementById('dynamic-greeting').textContent = `${timeGreeting}, ${window.currentUser} 💪`;
-        }
-
         function autoSelectDay() {
             if(!hasAutoSelectedDay) {
                 const today = new Date().getDay(); 
@@ -413,8 +444,16 @@
                 else window.currentDay = 'progreso';
                 hasAutoSelectedDay = true;
             }
-            document.getElementById('training-date').value = getLocalISODate();
-            document.getElementById('bw-date').value = getLocalISODate();
+            
+            // Set input values
+            const todayISO = getLocalISODate();
+            document.getElementById('training-date').value = todayISO;
+            document.getElementById('bw-date').value = todayISO;
+            
+            // Set display texts
+            document.getElementById('display-training-date').textContent = formatAestheticDate(todayISO);
+            document.getElementById('display-bw-date').textContent = formatAestheticDate(todayISO);
+            
             updateGreeting();
             renderTabs();
             if(window.currentDay === 'progreso') renderProgress(); else renderExercises(window.currentDay);
@@ -467,13 +506,18 @@
         function playSavedAnimation(btnId) {
             const btn = document.getElementById(btnId);
             if(btn) {
-                const originalText = btn.innerText;
+                if (btn.dataset.animating === "true") return; 
+                const originalText = btn.innerHTML;
+                
+                btn.dataset.animating = "true";
                 btn.classList.add('btn-saved');
-                btn.innerText = '¡Guardado!';
+                btn.innerHTML = '¡Guardado! ✅';
+                
                 setTimeout(() => {
                     btn.classList.remove('btn-saved');
-                    btn.innerText = originalText;
-                }, 1000);
+                    btn.innerHTML = originalText;
+                    btn.dataset.animating = "false";
+                }, 1500);
             }
         }
 
@@ -482,11 +526,11 @@
             const btnKg = document.getElementById(`btn-kg-${dayId}-${index}`);
             const btnLbs = document.getElementById(`btn-lbs-${dayId}-${index}`);
             if(unit === 'kg') {
-                btnKg.className = 'px-3 py-1.5 rounded-md text-[11px] font-bold transition-colors bg-emerald-500 text-white shadow-sm';
-                btnLbs.className = 'px-3 py-1.5 rounded-md text-[11px] font-bold transition-colors bg-slate-800 text-slate-400 hover:bg-slate-700';
+                btnKg.className = 'px-3 py-1 rounded-md text-xs font-bold transition-all duration-200 bg-emerald-500 text-white shadow-md';
+                btnLbs.className = 'px-3 py-1 rounded-md text-xs font-bold transition-all duration-200 text-slate-400 hover:text-slate-200';
             } else {
-                btnLbs.className = 'px-3 py-1.5 rounded-md text-[11px] font-bold transition-colors bg-emerald-500 text-white shadow-sm';
-                btnKg.className = 'px-3 py-1.5 rounded-md text-[11px] font-bold transition-colors bg-slate-800 text-slate-400 hover:bg-slate-700';
+                btnLbs.className = 'px-3 py-1 rounded-md text-xs font-bold transition-all duration-200 bg-emerald-500 text-white shadow-md';
+                btnKg.className = 'px-3 py-1 rounded-md text-xs font-bold transition-all duration-200 text-slate-400 hover:text-slate-200';
             }
         }
 
@@ -530,7 +574,7 @@
             const timestamp = new Date(dateVal + 'T12:00:00').getTime();
             const weekNum = getWeekNumber(dateVal);
             
-            // 1. Guardado LOCAL (Siempre)
+            // 1. Guardado LOCAL (Siempre salva tu data)
             let lsHist = JSON.parse(localStorage.getItem(`tf_pro_hist_${window.currentUser}_${dayId}_${index}`)) || [];
             if(isNaN(val)) { lsHist = lsHist.filter(e => e.dateStr !== dateVal); } 
             else {
@@ -540,7 +584,7 @@
             }
             localStorage.setItem(`tf_pro_hist_${window.currentUser}_${dayId}_${index}`, JSON.stringify(lsHist));
 
-            // 2. Guardado NUBE (Si está activo)
+            // 2. Guardado NUBE (Sincronización a prueba de fallos)
             if (isCloudActive && auth?.currentUser) {
                 const existing = globalExerciseHistory.find(e => e.user === window.currentUser && e.dayId === dayId && e.exerciseIndex === index && e.dateStr === dateVal);
                 try {
@@ -624,7 +668,9 @@
                 const currentUnit = saved ? saved.unit : 'kg';
                 
                 const card = document.createElement('div');
-                card.className = 'glass-card rounded-2xl flex flex-col p-5 border-t-2 border-t-theme-500/50';
+                // h-full asegura que todas las tarjetas sean iguales de altas en la cuadrícula
+                card.className = 'glass-card rounded-2xl flex flex-col p-5 relative border-t-2 border-t-theme-500/50 h-full';
+                
                 card.innerHTML = `
                     <div class="flex flex-col mb-4">
                         <div class="flex justify-between items-start gap-2 mb-1">
@@ -645,22 +691,29 @@
                         </div>
                     </div>
 
-                    <div class="mt-auto border-t border-slate-700/50 pt-4 flex flex-col gap-3">
-                        <label class="block text-[10px] text-slate-400 uppercase tracking-widest mb-0.5">Carga de trabajo:</label>
+                    <!-- Layout robusto y responsive para inputs y botones -->
+                    <div class="mt-auto pt-4 border-t border-slate-700/50">
+                        <label class="block text-[10px] text-slate-400 uppercase tracking-widest mb-2 font-semibold">Carga de trabajo:</label>
                         
-                        <div class="flex flex-col xl:flex-row gap-2 w-full">
-                            <div class="flex items-center gap-2 w-full xl:flex-1">
+                        <div class="flex flex-col gap-3">
+                            <!-- Fila 1: Input y Unidad -->
+                            <div class="flex items-center gap-2">
                                 <input type="hidden" id="unit-${dayId}-${index}" value="${currentUnit}">
-                                <input type="number" step="0.5" inputmode="decimal" id="weight-${dayId}-${index}" value="${currentWeight}" placeholder="Ej. 45" class="flex-1 w-0 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-theme-500 transition-colors">
-                                <div class="flex bg-slate-900 rounded-lg p-1 border border-slate-700 flex-shrink-0">
-                                    <button type="button" id="btn-kg-${dayId}-${index}" onclick="toggleUnit('${dayId}', ${index}, 'kg')" class="px-3 py-1.5 rounded-md text-[11px] font-bold transition-colors ${currentUnit==='kg'?'bg-emerald-500 text-white shadow-sm':'bg-slate-800 text-slate-400 hover:bg-slate-700'}">KG</button>
-                                    <button type="button" id="btn-lbs-${dayId}-${index}" onclick="toggleUnit('${dayId}', ${index}, 'lbs')" class="px-3 py-1.5 rounded-md text-[11px] font-bold transition-colors ${currentUnit==='lbs'?'bg-emerald-500 text-white shadow-sm':'bg-slate-800 text-slate-400 hover:bg-slate-700'}">LBS</button>
+                                <input type="number" step="0.5" inputmode="decimal" id="weight-${dayId}-${index}" value="${currentWeight}" placeholder="Ej. 45" class="flex-1 w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2.5 text-white text-sm font-bold focus:outline-none focus:border-theme-500 transition-colors shadow-inner">
+                                <div class="flex bg-slate-900 rounded-lg p-1.5 border border-slate-700 flex-shrink-0 shadow-inner">
+                                    <button type="button" id="btn-kg-${dayId}-${index}" onclick="toggleUnit('${dayId}', ${index}, 'kg')" class="px-3 py-1 rounded-md text-xs font-bold transition-all duration-200 ${currentUnit==='kg'?'bg-emerald-500 text-white shadow-md':'text-slate-400 hover:text-slate-200'}">KG</button>
+                                    <button type="button" id="btn-lbs-${dayId}-${index}" onclick="toggleUnit('${dayId}', ${index}, 'lbs')" class="px-3 py-1 rounded-md text-xs font-bold transition-all duration-200 ${currentUnit==='lbs'?'bg-emerald-500 text-white shadow-md':'text-slate-400 hover:text-slate-200'}">LBS</button>
                                 </div>
                             </div>
                             
-                            <div class="flex gap-2 w-full xl:w-auto">
-                                <button onclick="startTimer(${ex.restTime})" class="flex-1 xl:w-32 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors border border-slate-600 shadow-sm">⏱ (${ex.restTime}s)</button>
-                                <button id="btn-save-${dayId}-${index}" onclick="saveWeight('${dayId}', ${index})" class="flex-1 xl:w-24 bg-theme-600 hover:bg-theme-500 text-white py-2.5 rounded-xl text-xs font-bold transition-all duration-300 shadow-lg shadow-theme-500/20">Guardar</button>
+                            <!-- Fila 2: Botones de Acción -->
+                            <div class="flex items-center gap-2">
+                                <button onclick="startTimer(${ex.restTime})" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl text-xs font-semibold transition-colors border border-slate-600 shadow-sm flex items-center justify-center gap-2 active:scale-95">
+                                    ⏱ Descanso (${ex.restTime}s)
+                                </button>
+                                <button id="btn-save-${dayId}-${index}" onclick="saveWeight('${dayId}', ${index})" class="w-28 bg-theme-600 hover:bg-theme-500 text-white py-2.5 rounded-xl text-xs font-bold transition-all duration-300 shadow-lg shadow-theme-500/30 active:scale-95">
+                                    Guardar
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -685,7 +738,7 @@
         function updateCharts() {
             Chart.defaults.color = '#94a3b8'; Chart.defaults.font.family = 'Inter';
             
-            // 1. DATA BW (Combinando Local y Cloud)
+            // 1. DATA BW 
             const bwMax = getMergedBodyWeights('Max');
             const bwPipe = getMergedBodyWeights('Pipe');
             const allBwDates = [...new Set([...bwMax.map(e=>e.dateStr), ...bwPipe.map(e=>e.dateStr)])].sort();
@@ -713,7 +766,7 @@
             if(!summaryHtml) summaryHtml = '<p class="text-slate-500 italic">No hay registros corporales aún.</p>';
             document.getElementById('bw-summary').innerHTML = summaryHtml;
 
-            // 2. DATA FUERZA
+            // 2. DATA FUERZA SEMANAL
             const wDataMax = getWeeklyStrengthData('Max');
             const wDataPipe = getWeeklyStrengthData('Pipe');
             const currentRealWeek = getWeekNumber(getLocalISODate());
@@ -831,10 +884,12 @@
                 const displayDate = formatAestheticDate(dateStr);
                 htmlStr += `<div class="bg-slate-800/40 border border-slate-700/80 rounded-xl overflow-hidden mt-2"><div class="bg-slate-800 px-3 py-2 border-b border-slate-700 flex justify-between items-center"><h4 class="font-bold text-slate-200 text-sm">📅 ${displayDate} <span class="text-slate-400 font-normal text-xs ml-2">(Sem ${weekNum})</span></h4></div><div class="p-3 divide-y divide-slate-700/50">`;
 
+                // Aquí mostramos los 5 ejercicios SIEMPRE
                 exercises.forEach((ex, index) => {
                     let mHist = getMergedHistory('Max', dayId, index);
                     let pHist = getMergedHistory('Pipe', dayId, index);
-                    const mEntry = mHist.find(e => e.dateStr === dateStr); const pEntry = pHist.find(e => e.dateStr === dateStr);
+                    const mEntry = mHist.find(e => e.dateStr === dateStr); 
+                    const pEntry = pHist.find(e => e.dateStr === dateStr);
 
                     const calcDiff = (hist, curr) => {
                         if(!curr) return '';
@@ -866,20 +921,20 @@
                 const encodedData = btoa(encodeURIComponent(JSON.stringify(dataToExport)));
                 const tempInput = document.createElement("input"); tempInput.value = encodedData; document.body.appendChild(tempInput);
                 tempInput.select(); document.execCommand("copy"); document.body.removeChild(tempInput);
-                showToast("✅ Código de datos copiado. Compártelo o úsalo para migrar.");
+                showToast("✅ Datos locales copiados. Pégalos en el otro dispositivo.");
             } catch (err) { showToast("Error al exportar", "error"); }
         }
 
         window.importData = async function() {
             const inputField = document.getElementById('import-code');
             const code = inputField.value.trim();
-            if(!code) { showToast("Pega el código", "error"); return; }
+            if(!code) { showToast("Pega el código primero", "error"); return; }
             
             try {
                 const decodedStr = decodeURIComponent(atob(code));
                 const dataToImport = JSON.parse(decodedStr);
                 
-                showToast("Procesando datos...", "success");
+                showToast("Integrando y subiendo a la nube...", "success");
                 
                 for (const key in dataToImport) {
                     if(key.startsWith('tf_pro_')) {
@@ -891,7 +946,6 @@
                             importedData.forEach(e => mergedMap.set(e.dateStr, e));
                             const mergedArray = Array.from(mergedMap.values()).sort((a,b)=>a.timestamp - b.timestamp);
                             
-                            // Guardamos localmente
                             localStorage.setItem(key, JSON.stringify(mergedArray));
 
                             // SUBIMOS A LA NUBE (MIGRACIÓN MAGISTRAL)
@@ -918,7 +972,7 @@
                         } else localStorage.setItem(key, dataToImport[key]);
                     }
                 }
-                inputField.value = ""; showToast(`✅ Importación y sincronización exitosa.`); updateCharts(); 
+                inputField.value = ""; showToast(`✅ Migración exitosa. Gráficas actualizadas.`); updateCharts(); 
                 if(window.currentDay !== 'progreso') renderExercises(window.currentDay);
             } catch (err) { showToast("Código inválido", "error"); }
         }
